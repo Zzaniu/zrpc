@@ -1,0 +1,10 @@
+ClientConf:
+  Model: Dev
+  Etcd:
+    Hosts: "172.18.2.249:20000,172.18.2.249:20002,172.18.2.249:20004"
+UserServerName: user.rpc
+AddServerName: add.rpc
+Trace:
+  Endpoint: "http://172.18.2.249:14268/api/traces"
+  Name: better
+  Model: Dev

@@ -1,0 +1,43 @@
+// protoc -I . helloworld.proto --go_out=plugins=grpc:.
+// protoc -I=. --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative helloworld.proto
+syntax = "proto3";
+
+option go_package = "./;proto";
+
+service Greeter {
+  // Sends a greeting
+  rpc SayHello (HelloRequest) returns (HelloReply) {}
+}
+
+service AddServer {
+  rpc AddInt (AddIntRequest) returns (AddIntReply) {}
+  rpc AddFloat (AddFloatRequest) returns (AddFloatReply) {}
+}
+
+message HelloRequest {
+  string name = 1;
+}
+
+message HelloReply {
+  string message = 1;
+}
+
+message AddIntRequest {
+  int32 value1 = 1;
+  int32 value2 = 2;
+}
+
+message AddIntReply {
+  int32 message = 1;
+}
+
+message AddFloatRequest {
+  float value1 = 1;
+  float value2 = 2;
+}
+
+message AddFloatReply {
+  float message = 1;
+}
+
+// go语言中是生成一个文件，也就只有python会生成两个文件
