@@ -1,12 +1,12 @@
 package redis_lock
 
 import (
+	"github.com/Zzaniu/zrpc/tool/distributed-lock"
 	"github.com/go-basic/uuid"
 	"github.com/go-redis/redis"
 	"golang.org/x/xerrors"
 	"sync/atomic"
 	"time"
-	"zrpc/tool/distributed-lock"
 )
 
 const (

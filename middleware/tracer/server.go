@@ -32,6 +32,7 @@ package tracer
 
 import (
 	"context"
+	"github.com/Zzaniu/zrpc/tool/ztracer"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/baggage"
 	"go.opentelemetry.io/otel/codes"
@@ -40,7 +41,6 @@ import (
 	gcodes "google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
-	"zrpc/tool/ztracer"
 )
 
 func ServerTraceInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo,

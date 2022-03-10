@@ -1,4 +1,4 @@
-module zrpc
+module github.com/Zzaniu/zrpc
 
 go 1.16
 

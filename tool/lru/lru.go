@@ -2,8 +2,8 @@ package lru
 
 import (
 	"container/list"
+	"github.com/Zzaniu/zrpc/tool/safemap"
 	"sync"
-	"zrpc/tool/safemap"
 )
 
 type (

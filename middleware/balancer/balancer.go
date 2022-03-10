@@ -31,9 +31,9 @@ Desc   :
 package balancer
 
 import (
+	"github.com/Zzaniu/zrpc/middleware/balancer/p2c"
 	"google.golang.org/grpc/balancer"
 	"google.golang.org/grpc/balancer/base"
-	"zrpc/middleware/balancer/p2c"
 )
 
 // 注册全局 balancer

@@ -32,12 +32,12 @@ package etcd
 
 import (
 	"context"
+	"github.com/Zzaniu/zrpc/middleware/register"
 	"go.etcd.io/etcd/api/v3/mvccpb"
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"math/rand"
 	"strings"
 	"time"
-	"zrpc/middleware/register"
 )
 
 type (

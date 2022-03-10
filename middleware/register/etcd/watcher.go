@@ -32,8 +32,8 @@ package etcd
 
 import (
 	"context"
+	"github.com/Zzaniu/zrpc/middleware/register"
 	clientv3 "go.etcd.io/etcd/client/v3"
-	"zrpc/middleware/register"
 )
 
 var _ register.IWatcher = &Watcher{}

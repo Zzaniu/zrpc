@@ -3,10 +3,10 @@ package mq_mail
 import (
 	"encoding/base64"
 	"encoding/json"
+	"github.com/Zzaniu/zrpc/tool/mq/rabbit"
 	"golang.org/x/xerrors"
 	"io/ioutil"
 	"path"
-	"zrpc/tool/mq/rabbit"
 )
 
 type MailInfo struct {

@@ -2,11 +2,11 @@ package rabbit
 
 import (
 	"fmt"
+	"github.com/Zzaniu/zrpc/tool/xlog"
 	"github.com/streadway/amqp"
 	"golang.org/x/xerrors"
 	"strconv"
 	"time"
-	"zrpc/tool/xlog"
 )
 
 type RbInfo struct {

@@ -32,12 +32,12 @@ package mysql
 
 import (
 	"fmt"
+	"github.com/Zzaniu/zrpc/tool/xlog"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 	"sync"
 	"time"
-	"zrpc/tool/xlog"
 )
 
 type (

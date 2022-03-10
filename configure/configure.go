@@ -31,9 +31,9 @@ Desc   :
 package configure
 
 import (
+	"github.com/Zzaniu/zrpc/tool/xlog"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
-	"zrpc/tool/xlog"
 )
 
 const (

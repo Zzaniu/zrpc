@@ -3,7 +3,7 @@ package str_set
 import (
 	"bytes"
 	"fmt"
-	"zrpc/tool/set"
+	"github.com/Zzaniu/zrpc/tool/set"
 )
 
 var (

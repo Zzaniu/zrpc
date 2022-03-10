@@ -3,8 +3,8 @@ package sync_str_set
 import (
 	"bytes"
 	"fmt"
+	"github.com/Zzaniu/zrpc/tool/set"
 	"sync"
-	"zrpc/tool/set"
 )
 
 // syncStrSet 保证并发安全

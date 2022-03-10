@@ -33,9 +33,9 @@ package rpc
 import (
 	"context"
 	"fmt"
-	"zrpc/configure"
-	"zrpc/middleware/register"
-	"zrpc/middleware/register/etcd"
+	"github.com/Zzaniu/zrpc/configure"
+	"github.com/Zzaniu/zrpc/middleware/register"
+	"github.com/Zzaniu/zrpc/middleware/register/etcd"
 )
 
 type (

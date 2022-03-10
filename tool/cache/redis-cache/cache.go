@@ -2,6 +2,8 @@ package redis_cache
 
 import (
 	"fmt"
+	"github.com/Zzaniu/zrpc/tool/cache"
+	"github.com/Zzaniu/zrpc/tool/xlog"
 	"github.com/go-redis/redis"
 	"golang.org/x/sync/singleflight"
 	"golang.org/x/xerrors"
@@ -9,8 +11,6 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
-	"zrpc/tool/cache"
-	"zrpc/tool/xlog"
 )
 
 const (

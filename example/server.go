@@ -34,17 +34,17 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/Zzaniu/zrpc"
+	"github.com/Zzaniu/zrpc/configure"
+	"github.com/Zzaniu/zrpc/configure/rpc"
+	proto2 "github.com/Zzaniu/zrpc/example/proto"
+	"github.com/Zzaniu/zrpc/tool/ztracer"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"os"
 	"os/signal"
 	"time"
-	"zrpc"
-	"zrpc/configure"
-	"zrpc/configure/rpc"
-	proto2 "zrpc/example/proto"
-	"zrpc/tool/ztracer"
 )
 
 type (

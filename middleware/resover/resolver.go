@@ -34,6 +34,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/Zzaniu/zrpc/middleware/register"
 	etcdClientV3 "go.etcd.io/etcd/client/v3"
 	"golang.org/x/xerrors"
 	"google.golang.org/grpc/resolver"
@@ -41,7 +42,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-	"zrpc/middleware/register"
 )
 
 type etcdResolverBuilder struct{}

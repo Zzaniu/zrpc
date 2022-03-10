@@ -33,12 +33,12 @@ package etcd
 import (
 	"context"
 	"errors"
+	"github.com/Zzaniu/zrpc/middleware/register"
+	strSet "github.com/Zzaniu/zrpc/tool/set/str-set"
+	"github.com/Zzaniu/zrpc/tool/xlog"
 	"google.golang.org/grpc/resolver"
 	"strings"
 	"time"
-	"zrpc/middleware/register"
-	strSet "zrpc/tool/set/str-set"
-	"zrpc/tool/xlog"
 )
 
 const (

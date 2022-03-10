@@ -33,17 +33,17 @@ package zrpc
 import (
 	"context"
 	"fmt"
+	"github.com/Zzaniu/zrpc/configure/rpc"
+	_ "github.com/Zzaniu/zrpc/middleware/balancer"
+	"github.com/Zzaniu/zrpc/middleware/balancer/p2c"
+	"github.com/Zzaniu/zrpc/middleware/register"
+	_ "github.com/Zzaniu/zrpc/middleware/resover"
+	"github.com/Zzaniu/zrpc/middleware/resover/etcd"
+	"github.com/Zzaniu/zrpc/middleware/timeout"
+	"github.com/Zzaniu/zrpc/middleware/tracer"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"time"
-	"zrpc/configure/rpc"
-	_ "zrpc/middleware/balancer"
-	"zrpc/middleware/balancer/p2c"
-	"zrpc/middleware/register"
-	_ "zrpc/middleware/resover"
-	"zrpc/middleware/resover/etcd"
-	"zrpc/middleware/timeout"
-	"zrpc/middleware/tracer"
 )
 
 type (

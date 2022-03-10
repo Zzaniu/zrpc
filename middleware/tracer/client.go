@@ -32,6 +32,7 @@ package tracer
 
 import (
 	"context"
+	"github.com/Zzaniu/zrpc/tool/ztracer"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
@@ -39,7 +40,6 @@ import (
 	gcodes "google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
-	"zrpc/tool/ztracer"
 )
 
 // ClientTraceInterceptor 链路追踪拦截器

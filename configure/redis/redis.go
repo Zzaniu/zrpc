@@ -31,10 +31,10 @@ Desc   :
 package redis
 
 import (
+	"github.com/Zzaniu/zrpc/tool/xlog"
 	"strings"
 	"sync"
 	"time"
-	"zrpc/tool/xlog"
 
 	"github.com/go-redis/redis"
 )
