@@ -1,3 +1,5 @@
+// TODO 并发有问题: 1. 写入没有加锁   2. 切割文件没有加锁
+
 package xlog
 
 import (
