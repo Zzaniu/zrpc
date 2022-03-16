@@ -35,7 +35,7 @@ import (
 	"errors"
 	"github.com/Zzaniu/zrpc/middleware/register"
 	strSet "github.com/Zzaniu/zrpc/tool/set/str-set"
-	"github.com/Zzaniu/zrpc/tool/xlog"
+	"github.com/Zzaniu/zrpc/tool/zlog"
 	"google.golang.org/grpc/resolver"
 	"strings"
 	"time"
@@ -115,7 +115,7 @@ func (d *discoveryResolver) watch() {
 			if errors.Is(err, context.Canceled) {
 				return
 			}
-			xlog.XLog.Errorf("[resolver] 获取服务失败, err: %v", err)
+			zlog.Errorf("[resolver] 获取服务失败, err: %v", err)
 			time.Sleep(time.Second)
 			continue
 		}
@@ -143,13 +143,13 @@ func (d *discoveryResolver) update(ins []*register.ServiceInstance) {
 		addrs = append(addrs, addr)
 	}
 	if len(addrs) == 0 {
-		xlog.XLog.Warn("[resolver] 未找到服务")
+		zlog.Warn("[resolver] 未找到服务")
 		return
 	}
 	// 更新地址信息
 	err := d.cc.UpdateState(resolver.State{Addresses: addrs})
 	if err != nil {
-		xlog.XLog.Errorf("[resolver] 更新服务失败, err: %s", err)
+		zlog.Errorf("[resolver] 更新服务失败, err: %s", err)
 	}
 }
 
@@ -160,6 +160,6 @@ func (d discoveryResolver) Close() {
 	d.cancel()
 	err := d.w.Stop()
 	if err != nil {
-		xlog.XLog.Errorf("[resolver] 停止watch失败, err: %s", err)
+		zlog.Errorf("[resolver] 停止watch失败, err: %s", err)
 	}
 }

@@ -32,7 +32,7 @@ package mysql
 
 import (
 	"fmt"
-	"github.com/Zzaniu/zrpc/tool/xlog"
+	"github.com/Zzaniu/zrpc/tool/zlog"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -63,12 +63,12 @@ func NewMysqlDb(msl Mysql) *gorm.DB {
 		dsn := fmt.Sprintf(str, msl.Username, msl.Password, msl.Host, msl.Port, msl.Database)
 		gdb, err = gorm.Open(mysql.Open(dsn), &gorm.Config{Logger: logger.Default.LogMode(logger.Info)})
 		if err != nil {
-			xlog.XLog.Fatalf("mysql gorm.Open failed: %v", err)
+			zlog.Fatalf("mysql gorm.Open failed: %v", err)
 		}
 		// 设置连接池
 		db, err := gdb.DB()
 		if err != nil {
-			xlog.XLog.Fatalf("mysql gdb.DB failed: %v", err)
+			zlog.Fatalf("mysql gdb.DB failed: %v", err)
 		}
 		db.SetMaxIdleConns(50)                  // 空闲
 		db.SetMaxOpenConns(100)                 // 打开
@@ -76,7 +76,7 @@ func NewMysqlDb(msl Mysql) *gorm.DB {
 		db.SetConnMaxLifetime(time.Hour * 3)    // 超时
 		err = db.Ping()
 		if err != nil {
-			xlog.XLog.Fatalf("mysql db.Ping failed: %v", err)
+			zlog.Fatalf("mysql db.Ping failed: %v", err)
 		}
 	})
 	return gdb

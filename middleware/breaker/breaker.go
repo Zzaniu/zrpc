@@ -34,7 +34,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/Zzaniu/zrpc/tool/sre"
-	"github.com/Zzaniu/zrpc/tool/xlog"
+	"github.com/Zzaniu/zrpc/tool/zlog"
 	"github.com/Zzaniu/zrpc/utils/errcode"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -119,7 +119,7 @@ func WithServerBreakerInterceptor() grpc.UnaryServerInterceptor {
 		breaker := breakGroup.Get(info.FullMethod)
 		e := breaker.Allow()
 		if e == sre.ErrNotAllowed {
-			xlog.XLog.Warnf("log [zrpc] dropped, %s", info.FullMethod)
+			zlog.Warnf("log [zrpc] dropped, %s", info.FullMethod)
 			return nil, status.New(codes.Unavailable, e.Error()).Err()
 		}
 

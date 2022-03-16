@@ -31,7 +31,7 @@ Desc   :
 package redis
 
 import (
-	"github.com/Zzaniu/zrpc/tool/xlog"
+	"github.com/Zzaniu/zrpc/tool/zlog"
 	"strings"
 	"sync"
 	"time"
@@ -70,7 +70,7 @@ func (rds *Redis) Init() {
 			})
 			_, err := clusterCache.Ping().Result()
 			if err != nil {
-				xlog.XLog.Fatalf("redis cluster ping failed: %v", err)
+				zlog.Fatalf("redis cluster ping failed: %v", err)
 			}
 		default:
 			cache = redis.NewClient(&redis.Options{
@@ -80,7 +80,7 @@ func (rds *Redis) Init() {
 			})
 			_, err := cache.Ping().Result()
 			if err != nil {
-				xlog.XLog.Fatalf("redis ping failed: %v", err)
+				zlog.Fatalf("redis ping failed: %v", err)
 			}
 		}
 	})

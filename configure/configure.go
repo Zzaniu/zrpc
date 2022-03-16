@@ -31,7 +31,7 @@ Desc   :
 package configure
 
 import (
-	"github.com/Zzaniu/zrpc/tool/xlog"
+	"github.com/Zzaniu/zrpc/tool/zlog"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 )
@@ -63,10 +63,10 @@ func (e *EtcdConf) HasEtcd() bool {
 func MustLoadCfg(path string, config interface{}) {
 	content, err := ioutil.ReadFile(path)
 	if err != nil {
-		xlog.XLog.Fatalf("read cfg file fail: %v", err)
+		zlog.Fatalf("read cfg file fail: %v", err)
 	}
 	err = yaml.Unmarshal(content, config)
 	if err != nil {
-		xlog.XLog.Fatalf("read cfg file fail: %v", err)
+		zlog.Fatalf("read cfg file fail: %v", err)
 	}
 }

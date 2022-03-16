@@ -32,7 +32,7 @@ package recovery
 
 import (
 	"context"
-	"github.com/Zzaniu/zrpc/tool/xlog"
+	"github.com/Zzaniu/zrpc/tool/zlog"
 	"golang.org/x/xerrors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -55,6 +55,6 @@ func handleCrash(handler func(interface{})) {
 }
 
 func toPanicError(r interface{}) error {
-	xlog.XLog.Errorf("%+v\n\n%s", xerrors.Errorf("%w", r))
+	zlog.Errorf("%+v\n\n%s", xerrors.Errorf("%w", r))
 	return status.Errorf(codes.Internal, "panic: %v", r)
 }

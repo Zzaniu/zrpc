@@ -3,7 +3,7 @@ package redis_cache
 import (
 	"fmt"
 	"github.com/Zzaniu/zrpc/tool/cache"
-	"github.com/Zzaniu/zrpc/tool/xlog"
+	"github.com/Zzaniu/zrpc/tool/zlog"
 	"github.com/go-redis/redis"
 	"golang.org/x/sync/singleflight"
 	"golang.org/x/xerrors"
@@ -107,7 +107,7 @@ func (r *RedisCache) Get(key string, f func() (string, error)) (string, error) {
 			}
 
 			if !ret {
-				xlog.XLog.Warnf("设置缓存失败, key = %v, val = %v\n", key, result)
+				zlog.Warnf("设置缓存失败, key = %v, val = %v\n", key, result)
 			}
 		}
 
