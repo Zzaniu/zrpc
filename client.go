@@ -79,8 +79,8 @@ func MustNewClientConn(rpcClient rpc.Client, serverName string, opts ...COption)
 	options := []COption{
 		WithDialOption(Block()),                         // 阻塞直到链接建立成功
 		WithDialOption(Insecure()),                      // 标志非安全的(不用HTTPS)
-		WithDialOption(BalancerOption()),                // 负载均衡器(p2c)
-		WithDialOption(WithDiscovery(client.discovery)), // 服务发现器
+		WithDialOption(balancerOption()),                // 负载均衡器(p2c)
+		WithDialOption(withDiscovery(client.discovery)), // 服务发现器
 	}
 	if len(opts) > 0 {
 		options = append(options, opts...) // 在这里注入 clientInterceptor、grpc.DialOption 等
@@ -91,7 +91,7 @@ func MustNewClientConn(rpcClient rpc.Client, serverName string, opts ...COption)
 	}
 
 	// 添加 链路追踪拦截器、请求超时拦截器， 以及用户传入的拦截器
-	WithDialOption(WithUnaryClientInterceptors(client.option.clientInterceptor...))(&client.option)
+	WithDialOption(withUnaryClientInterceptors(client.option.clientInterceptor...))(&client.option)
 
 	// 连接超时使用context, 看源码可知 grpc.WithTimeout() 被弃用了
 	ctx, cancelFunc := context.WithTimeout(context.Background(), time.Second*5)
@@ -103,7 +103,8 @@ func MustNewClientConn(rpcClient rpc.Client, serverName string, opts ...COption)
 	return coon
 }
 
-func BalancerOption() grpc.DialOption {
+// BalancerOption 负载均衡
+func balancerOption() grpc.DialOption {
 	return grpc.WithDefaultServiceConfig(fmt.Sprintf(`{"loadBalancingPolicy":"%s"}`, p2c.Name))
 }
 
@@ -119,8 +120,8 @@ func WithClientInterceptor(clientInterceptor ...grpc.UnaryClientInterceptor) COp
 	}
 }
 
-// WithDiscovery 注册非全局的服务发现，此优先级高于全局注册
-func WithDiscovery(discoverer register.IDiscovery) grpc.DialOption {
+// withDiscovery 注册非全局的服务发现，此优先级高于全局注册
+func withDiscovery(discoverer register.IDiscovery) grpc.DialOption {
 	return grpc.WithResolvers(etcd.NewResolverBuilderEtcd(discoverer))
 }
 
@@ -132,9 +133,9 @@ func Insecure() grpc.DialOption {
 	return grpc.WithTransportCredentials(insecure.NewCredentials())
 }
 
-// WithUnaryClientInterceptors 按顺序加载拦截器
+// withUnaryClientInterceptors 按顺序加载拦截器
 // WithChainUnaryInterceptor 是一个按照顺序来的
 // WithUnaryInterceptor 总是在最前面
-func WithUnaryClientInterceptors(interceptors ...grpc.UnaryClientInterceptor) grpc.DialOption {
+func withUnaryClientInterceptors(interceptors ...grpc.UnaryClientInterceptor) grpc.DialOption {
 	return grpc.WithChainUnaryInterceptor(interceptors...)
 }

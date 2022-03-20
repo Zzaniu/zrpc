@@ -85,7 +85,7 @@ func MustNewServer(ctx context.Context, server rpc.Server, registerServer Regist
 	}
 
 	// 添加 openTelemetry 链路追踪、bbr自动降载、sre熔断器、recover拦截器, 以及用户传入的拦截器
-	WithServerOption(WithUnaryServerInterceptors(srv.option.serverInterceptor...))(&srv.option)
+	WithServerOption(withUnaryServerInterceptors(srv.option.serverInterceptor...))(&srv.option)
 
 	srv.server = grpc.NewServer(srv.option.opts...)
 
@@ -126,24 +126,21 @@ func (s *Server) StopServe() {
 	}
 }
 
-// BuildServerOption 构建服务端拦截器
-func (s *Server) BuildServerOption() grpc.ServerOption {
-	// TODO 创建拦截器，比如说那些熔断啊限流啊之类的东西了
-	return nil
-}
-
+// WithServerOption 通过 grpc.ServerOption 生成 SOption
 func WithServerOption(opts ...grpc.ServerOption) SOption {
 	return func(option *serverOption) {
 		option.opts = append(option.opts, opts...)
 	}
 }
 
+// WithServerInterceptor 生成服务端拦截器
 func WithServerInterceptor(serverInterceptor ...grpc.UnaryServerInterceptor) SOption {
 	return func(option *serverOption) {
 		option.serverInterceptor = append(option.serverInterceptor, serverInterceptor...)
 	}
 }
 
-func WithUnaryServerInterceptors(interceptors ...grpc.UnaryServerInterceptor) grpc.ServerOption {
+// withUnaryServerInterceptors 生成顺序的服务端拦截器
+func withUnaryServerInterceptors(interceptors ...grpc.UnaryServerInterceptor) grpc.ServerOption {
 	return grpc.ChainUnaryInterceptor(interceptors...)
 }
