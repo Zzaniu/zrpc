@@ -49,33 +49,45 @@ type (
 		ctx             context.Context
 		ServiceInstance *register.ServiceInstance
 		register        register.IRegister
-		serverOption    []grpc.ServerOption
+		option          serverOption
+	}
+
+	serverOption struct {
+		opts              []grpc.ServerOption
+		serverInterceptor []grpc.UnaryServerInterceptor
 	}
 
 	RegisterServer func(server *grpc.Server)
-	SOption        func(*[]grpc.ServerOption)
+	SOption        func(*serverOption)
 )
 
-func MustNewServer(ctx context.Context, server rpc.Server, registerServer RegisterServer, serverOption ...grpc.ServerOption) *Server {
+func MustNewServer(ctx context.Context, server rpc.Server, registerServer RegisterServer, serverOptions ...SOption) *Server {
 	srv := &Server{
-		ctx:          ctx,
-		register:     server.MustNewRegister(),
-		serverOption: serverOption,
+		ctx:      ctx,
+		register: server.MustNewRegister(),
+		option: serverOption{
+			serverInterceptor: []grpc.UnaryServerInterceptor{
+				tracer.ServerTraceInterceptor,          // openTelemetry 链路追踪拦截器
+				limiter.WithServerLimiterInterceptor(), // bbr 自动限流拦截器
+				breaker.WithServerBreakerInterceptor(), // sre 弹性熔断拦截器
+				recovery.UnaryRecoverInterceptor,       // recover 拦截器
+			},
+		},
 		ServiceInstance: register.NewServiceInstance(
 			time.Now().Unix(),
 			server.GetNamespace(),
 			server.GetServiceName(),
 			server.GetEndpoint()),
 	}
-	// span链路追踪、bbr自动降载、sre熔断器、recover拦截器
-	WithServerOption(WithUnaryServerInterceptors(
-		// TODO span链路追踪拦截器
-		tracer.ServerTraceInterceptor,
-		limiter.WithServerLimiterInterceptor(), // bbr 自动限流拦截器
-		breaker.WithServerBreakerInterceptor(), // sre 弹性熔断拦截器
-		recovery.UnaryRecoverInterceptor,       // recover 拦截器
-	))(&srv.serverOption)
-	srv.server = grpc.NewServer(srv.serverOption...)
+
+	for _, o := range serverOptions {
+		o(&srv.option) // 在这里注入 serverInterceptor、grpc.ServerOption 等
+	}
+
+	// 添加 openTelemetry 链路追踪、bbr自动降载、sre熔断器、recover拦截器, 以及用户传入的拦截器
+	WithServerOption(WithUnaryServerInterceptors(srv.option.serverInterceptor...))(&srv.option)
+
+	srv.server = grpc.NewServer(srv.option.opts...)
 
 	// 将服务注册进来
 	registerServer(srv.server)
@@ -121,8 +133,14 @@ func (s *Server) BuildServerOption() grpc.ServerOption {
 }
 
 func WithServerOption(opts ...grpc.ServerOption) SOption {
-	return func(options *[]grpc.ServerOption) {
-		*options = append(*options, opts...)
+	return func(option *serverOption) {
+		option.opts = append(option.opts, opts...)
+	}
+}
+
+func WithServerInterceptor(serverInterceptor ...grpc.UnaryServerInterceptor) SOption {
+	return func(option *serverOption) {
+		option.serverInterceptor = append(option.serverInterceptor, serverInterceptor...)
 	}
 }
 

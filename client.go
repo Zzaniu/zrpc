@@ -47,51 +47,60 @@ import (
 )
 
 type (
-	IClient interface {
-		Coon() *grpc.ClientConn
-	}
 	Client struct {
-		coon      *grpc.ClientConn
 		discovery register.IDiscovery
-		opts      []grpc.DialOption
 		target    string
+		option    clientOption
 	}
 
-	COption func(*[]grpc.DialOption)
+	clientOption struct {
+		opts              []grpc.DialOption
+		clientInterceptor []grpc.UnaryClientInterceptor
+	}
+
+	COption func(*clientOption)
 )
 
-// MustNewClient 新建一个 Client 实例
-func MustNewClient(rpcClient rpc.Client, serverName string, opts ...grpc.DialOption) IClient {
+// MustNewClientConn 新建一个 Client 实例
+func MustNewClientConn(rpcClient rpc.Client, serverName string, opts ...COption) *grpc.ClientConn {
 	client := &Client{
 		discovery: rpcClient.MustNewDiscovery(),
 		target:    rpcClient.GetTarget(serverName),
+		option: clientOption{
+			clientInterceptor: []grpc.UnaryClientInterceptor{
+				tracer.ClientTraceInterceptor,               // 链路追踪拦截器
+				timeout.TimeoutInterceptor(time.Second * 3), // 请求超时拦截器
+				// breaker.ClientBreakInterceptor,            // 熔断拦截器(客户端真的需要熔断器吗？我感觉是不需要啊)
+				// TODO 重试拦截器, 如果请求失败就重试个两三次之类的
+			},
+		},
 	}
 
-	WithDialOption(opts...)(&client.opts)
-	WithDialOption(Block())(&client.opts)                         // 阻塞直到链接建立成功
-	WithDialOption(Insecure())(&client.opts)                      // 标志非安全的(不用HTTPS)
-	WithDialOption(BalancerOption())(&client.opts)                // 负载均衡器(p2c)
-	WithDialOption(WithDiscovery(client.discovery))(&client.opts) // 服务发现器
-	WithDialOption(WithUnaryClientInterceptors(
-		// TODO 链路追踪拦截器啊, 用来查看调用链哪个地方出错, 或者各链路是哪个地方耗时异常等
-		tracer.ClientTraceInterceptor, // 链路追踪拦截器
-		// breaker.ClientBreakInterceptor,            // 熔断拦截器(客户端真的需要熔断器吗？我感觉是不需要啊)
-		timeout.TimeoutInterceptor(time.Second*3), // 请求超时拦截器
-		// 	TODO 重试拦截器, 如果请求失败就重试个两三次之类的
-	))(&client.opts)
-	// 连接超时
+	options := []COption{
+		WithDialOption(Block()),                         // 阻塞直到链接建立成功
+		WithDialOption(Insecure()),                      // 标志非安全的(不用HTTPS)
+		WithDialOption(BalancerOption()),                // 负载均衡器(p2c)
+		WithDialOption(WithDiscovery(client.discovery)), // 服务发现器
+	}
+	if len(opts) > 0 {
+		options = append(options, opts...) // 在这里注入 clientInterceptor、grpc.DialOption 等
+	}
+
+	for _, o := range options {
+		o(&client.option)
+	}
+
+	// 添加 链路追踪拦截器、请求超时拦截器， 以及用户传入的拦截器
+	WithDialOption(WithUnaryClientInterceptors(client.option.clientInterceptor...))(&client.option)
+
+	// 连接超时使用context, 看源码可知 grpc.WithTimeout() 被弃用了
 	ctx, cancelFunc := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancelFunc()
-	coon, err := grpc.DialContext(ctx, client.target, client.opts...)
+	coon, err := grpc.DialContext(ctx, client.target, client.option.opts...)
 	if err != nil {
 		panic(fmt.Sprintf("连接超时, serverName = %v, target = %v, err = %v\n", serverName, client.target, err))
 	}
-
-	return &Client{coon: coon}
-}
-
-func (c *Client) Coon() *grpc.ClientConn {
-	return c.coon
+	return coon
 }
 
 func BalancerOption() grpc.DialOption {
@@ -99,8 +108,14 @@ func BalancerOption() grpc.DialOption {
 }
 
 func WithDialOption(opts ...grpc.DialOption) COption {
-	return func(options *[]grpc.DialOption) {
-		*options = append(*options, opts...)
+	return func(option *clientOption) {
+		option.opts = append(option.opts, opts...)
+	}
+}
+
+func WithClientInterceptor(clientInterceptor ...grpc.UnaryClientInterceptor) COption {
+	return func(option *clientOption) {
+		option.clientInterceptor = append(option.clientInterceptor, clientInterceptor...)
 	}
 }
 

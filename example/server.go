@@ -81,8 +81,8 @@ func main() {
 			Hosts: cfg.Hosts,
 		},
 	}
-	client := zrpc.MustNewClient(conf, "add.rpc")
-	AddRpc := proto2.NewAddServerClient(client.Coon())
+	client := zrpc.MustNewClientConn(conf, "add.rpc")
+	AddRpc := proto2.NewAddServerClient(client)
 
 	// test end
 

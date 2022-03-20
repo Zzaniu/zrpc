@@ -68,11 +68,11 @@ func main() {
 		panic(err)
 	}
 
-	// target := "discovery:///172.18.2.249:20000,172.18.2.249:20002,172.18.2.249:20004/Dev/user.rpc"
-	userClient := zrpc.MustNewClient(cfg, cfg.UserServerName)
-	addClient := zrpc.MustNewClient(cfg, cfg.AddServerName)
-	UserRpc := proto2.NewGreeterClient(userClient.Coon())
-	AddRpc := proto2.NewAddServerClient(addClient.Coon())
+	// target := "discovery://172.18.2.249:20000,172.18.2.249:20002,172.18.2.249:20004/Dev/user.rpc"
+	userClientConn := zrpc.MustNewClientConn(cfg, cfg.UserServerName)
+	addClientConn := zrpc.MustNewClientConn(cfg, cfg.AddServerName)
+	UserRpc := proto2.NewGreeterClient(userClientConn)
+	AddRpc := proto2.NewAddServerClient(addClientConn)
 
 	for {
 		go func() {
