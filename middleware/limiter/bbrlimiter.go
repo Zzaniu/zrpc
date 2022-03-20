@@ -38,6 +38,7 @@ import (
 	"errors"
 	"github.com/Zzaniu/zrpc/tool/cpu"
 	"github.com/Zzaniu/zrpc/tool/window"
+	"github.com/Zzaniu/zrpc/tool/zlog"
 	"golang.org/x/sync/singleflight"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -304,7 +305,7 @@ func WithServerLimiterInterceptor() grpc.UnaryServerInterceptor {
 		handler grpc.UnaryHandler) (interface{}, error) {
 		doneFunc, err := limiter.Allow()
 		if err != nil {
-
+			zlog.Warnf("log [zrpc] bbrLimiter dropped, %s", info.FullMethod)
 			return nil, status.New(codes.Unavailable, err.Error()).Err()
 		}
 		resp, err := handler(ctx, req)

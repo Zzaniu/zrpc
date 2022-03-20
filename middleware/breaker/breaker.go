@@ -119,7 +119,7 @@ func WithServerBreakerInterceptor() grpc.UnaryServerInterceptor {
 		breaker := breakGroup.Get(info.FullMethod)
 		e := breaker.Allow()
 		if e == sre.ErrNotAllowed {
-			zlog.Warnf("log [zrpc] dropped, %s", info.FullMethod)
+			zlog.Warnf("log [zrpc] sreBreaker dropped, %s", info.FullMethod)
 			return nil, status.New(codes.Unavailable, e.Error()).Err()
 		}
 
