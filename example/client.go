@@ -39,7 +39,6 @@ import (
 	"github.com/Zzaniu/zrpc/configure/rpc"
 	proto2 "github.com/Zzaniu/zrpc/example/proto"
 	"github.com/Zzaniu/zrpc/tool/ztracer"
-	etcdClientV3 "go.etcd.io/etcd/client/v3"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"time"
@@ -57,8 +56,6 @@ type (
 var clientConfigFile = flag.String("f", "clientCfg.yaml", "the config file")
 
 func main() {
-	getRpcKey()
-
 	flag.Parse()
 	cfg := ClientConf{}
 	configure.MustLoadCfg(*clientConfigFile, &cfg)
@@ -121,23 +118,4 @@ func main() {
 		break
 	}
 	time.Sleep(time.Second * 5)
-}
-
-func getRpcKey() {
-	client, err := etcdClientV3.New(etcdClientV3.Config{
-		Endpoints:   []string{"172.18.2.249:20000", "172.18.2.249:20002", "172.18.2.249:20004"},
-		DialTimeout: 1 * time.Second,
-	})
-	if err != nil {
-		panic(err)
-	}
-	kv := etcdClientV3.NewKV(client)
-	resp, err := kv.Get(context.TODO(), "Dev/user.rpc/", etcdClientV3.WithPrefix())
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println("len(resp.Kvs) = ", resp.Kvs)
-	for _, s := range resp.Kvs {
-		fmt.Println("s.Value = ", string(s.Value))
-	}
 }
