@@ -48,8 +48,8 @@ type (
 
 	ClientConf struct {
 		configure.EtcdConf `yaml:"Etcd"`
-		NonBlock           bool   `yaml:"NonBlock"`
-		Model              string `yaml:"Model"`
+		nonBlock           bool   `yaml:"NonBlock"`
+		model              string `yaml:"Model"`
 	}
 
 	Server interface {
@@ -63,6 +63,7 @@ type (
 	Client interface {
 		HasEtcd() bool
 		GetTarget(string) string
+		NoBlock() bool
 		MustNewDiscovery() register.IDiscovery
 	}
 )
@@ -97,7 +98,7 @@ func (s *ServerConf) GetEndpoint() string {
 
 // GetTarget 返回一个用来做服务发现的 target
 func (c *ClientConf) GetTarget(serverName string) string {
-	return fmt.Sprintf("discovery://%s/%s/%s", c.EtcdConf.Hosts, c.Model, serverName)
+	return fmt.Sprintf("discovery://%s/%s/%s", c.EtcdConf.Hosts, c.model, serverName)
 }
 
 // MustNewDiscovery new 一个 Discovery
@@ -111,4 +112,8 @@ func (c *ClientConf) MustNewDiscovery() register.IDiscovery {
 		panic(err)
 	}
 	return discovery
+}
+
+func (c *ClientConf) NoBlock() bool {
+	return c.nonBlock
 }

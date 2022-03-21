@@ -77,11 +77,15 @@ func MustNewClientConn(rpcClient rpc.Client, serverName string, opts ...COption)
 	}
 
 	options := []COption{
-		WithDialOption(Block()),                         // 阻塞直到链接建立成功
 		WithDialOption(Insecure()),                      // 标志非安全的(不用HTTPS)
 		WithDialOption(balancerOption()),                // 负载均衡器(p2c)
 		WithDialOption(withDiscovery(client.discovery)), // 服务发现器
 	}
+	if !rpcClient.NoBlock() {
+		// 阻塞直到链接建立成功
+		options = append(options, WithDialOption(Block()))
+	}
+
 	if len(opts) > 0 {
 		options = append(options, opts...) // 在这里注入 clientInterceptor、grpc.DialOption 等
 	}
