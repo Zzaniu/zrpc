@@ -77,6 +77,7 @@ func MustNewClientConn(rpcClient rpc.Client, serverName string, opts ...COption)
 	}
 
 	options := []COption{
+		// TODO 后续可以考虑是否放开 https
 		WithDialOption(Insecure()),                      // 标志非安全的(不用HTTPS)
 		WithDialOption(balancerOption()),                // 负载均衡器(p2c)
 		WithDialOption(withDiscovery(client.discovery)), // 服务发现器
