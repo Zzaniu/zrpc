@@ -32,7 +32,9 @@ package zlog
 
 import (
 	"bytes"
+	"context"
 	"fmt"
+	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/xerrors"
 	"io"
 	"log"
@@ -300,4 +302,16 @@ func Error(args ...interface{}) {
 
 func Fatal(args ...interface{}) {
 	zlogx.Fatal(args...)
+}
+
+func WithContext(ctx context.Context) (spanId, traceId string) {
+	spanContext := trace.SpanContextFromContext(ctx)
+	if spanContext.HasSpanID() {
+		spanId = spanContext.SpanID().String()
+	}
+	if spanContext.HasTraceID() {
+		traceId = spanContext.TraceID().String()
+	}
+	fmt.Printf("spanid = %v, traceid = %v\n", spanId, traceId)
+	return
 }
