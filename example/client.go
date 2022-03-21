@@ -76,7 +76,7 @@ func main() {
 
 	for {
 		go func() {
-			ctx, cancelFunc := context.WithTimeout(context.Background(), time.Millisecond*50)
+			ctx, cancelFunc := context.WithTimeout(context.Background(), time.Millisecond*2000)
 			deadline, ok := ctx.Deadline()
 			fmt.Println("deadline = ", deadline, ", ok = ", ok)
 			res, err := UserRpc.SayHello(ctx, &proto2.HelloRequest{Name: "小可爱"})
