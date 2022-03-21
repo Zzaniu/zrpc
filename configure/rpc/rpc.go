@@ -51,7 +51,7 @@ type (
 	ClientConf struct {
 		configure.EtcdConf `yaml:"Etcd"`
 		nonBlock           bool   `yaml:"NonBlock"`
-		model              string `yaml:"Model"`
+		Model              string `yaml:"Model"`
 		timeOut            int    `yaml:"TimeOut"`
 	}
 
@@ -102,7 +102,7 @@ func (s *ServerConf) GetEndpoint() string {
 
 // GetTarget 返回一个用来做服务发现的 target
 func (c *ClientConf) GetTarget(serverName string) string {
-	return fmt.Sprintf("discovery://%s/%s/%s", c.EtcdConf.Hosts, c.model, serverName)
+	return fmt.Sprintf("discovery://%s/%s/%s", c.EtcdConf.Hosts, c.Model, serverName)
 }
 
 // MustNewDiscovery new 一个 Discovery
