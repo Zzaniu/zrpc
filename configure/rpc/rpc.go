@@ -50,9 +50,9 @@ type (
 
 	ClientConf struct {
 		configure.EtcdConf `yaml:"Etcd"`
-		nonBlock           bool   `yaml:"NonBlock"`
+		NonBlock           bool   `yaml:"NonBlock"`
 		Model              string `yaml:"Model"`
-		timeOut            int    `yaml:"TimeOut"`
+		Timeout            int    `yaml:"Timeout"`
 	}
 
 	Server interface {
@@ -118,13 +118,13 @@ func (c *ClientConf) MustNewDiscovery() register.IDiscovery {
 	return discovery
 }
 
-func (c *ClientConf) NoBlock() bool {
-	return c.nonBlock
-}
-
 func (c *ClientConf) TimeOut() int {
-	if c.timeOut == 0 {
+	if c.Timeout == 0 {
 		return clientTimeOut
 	}
-	return c.timeOut
+	return c.Timeout
+}
+
+func (c *ClientConf) NoBlock() bool {
+	return c.NonBlock
 }
