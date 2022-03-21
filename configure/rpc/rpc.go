@@ -38,6 +38,8 @@ import (
 	"github.com/Zzaniu/zrpc/middleware/register/etcd"
 )
 
+const clientTimeOut = 3000
+
 type (
 	ServerConf struct {
 		configure.EtcdConf `yaml:"Etcd"`
@@ -50,6 +52,7 @@ type (
 		configure.EtcdConf `yaml:"Etcd"`
 		nonBlock           bool   `yaml:"NonBlock"`
 		model              string `yaml:"Model"`
+		timeOut            int    `yaml:"TimeOut"`
 	}
 
 	Server interface {
@@ -64,6 +67,7 @@ type (
 		HasEtcd() bool
 		GetTarget(string) string
 		NoBlock() bool
+		TimeOut() int
 		MustNewDiscovery() register.IDiscovery
 	}
 )
@@ -116,4 +120,11 @@ func (c *ClientConf) MustNewDiscovery() register.IDiscovery {
 
 func (c *ClientConf) NoBlock() bool {
 	return c.nonBlock
+}
+
+func (c *ClientConf) TimeOut() int {
+	if c.timeOut == 0 {
+		return clientTimeOut
+	}
+	return c.timeOut
 }

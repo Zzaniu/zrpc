@@ -68,8 +68,8 @@ func MustNewClientConn(rpcClient rpc.Client, serverName string, opts ...COption)
 		target:    rpcClient.GetTarget(serverName),
 		option: clientOption{
 			clientInterceptor: []grpc.UnaryClientInterceptor{
-				tracer.ClientTraceInterceptor,               // 链路追踪拦截器
-				timeout.TimeoutInterceptor(time.Second * 3), // 请求超时拦截器
+				tracer.ClientTraceInterceptor, // 链路追踪拦截器
+				timeout.TimeoutInterceptor(time.Millisecond * time.Duration(rpcClient.TimeOut())), // 请求超时拦截器
 				// breaker.ClientBreakInterceptor,            // 熔断拦截器(客户端真的需要熔断器吗？我感觉是不需要啊)
 				// TODO 重试拦截器, 如果请求失败就重试个两三次之类的
 			},
