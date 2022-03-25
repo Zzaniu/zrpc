@@ -252,7 +252,7 @@ func setPrefixf(level LogLevel, format string) string {
 	b := bytes.Buffer{}
 	b.WriteString("[")
 	b.WriteString(levelStr)
-	b.WriteString("]")
+	b.WriteString("] ")
 	b.WriteString(format)
 	return b.String()
 }

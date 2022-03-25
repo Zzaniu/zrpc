@@ -39,6 +39,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+// UnaryRecoverInterceptor TODO 没有堆栈信息
 func UnaryRecoverInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo,
 	handler grpc.UnaryHandler) (resp interface{}, err error) {
 	defer handleCrash(func(r interface{}) {
