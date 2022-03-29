@@ -38,7 +38,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"runtime"
-	"strings"
 )
 
 // UnaryRecoverInterceptor TODO 没有堆栈信息
@@ -63,12 +62,8 @@ func toPanicError(r interface{}) error {
 }
 
 func getWhere(r interface{}) string {
-	pc, file, line, ok := runtime.Caller(5)
+	_, file, line, ok := runtime.Caller(5)
 	if ok {
-		fn := runtime.FuncForPC(pc).Name()
-		fns := strings.Split(fn, ".")
-		fn = fns[len(fns)-1]
-
 		return fmt.Sprintf("    %v:%v %v\n", file, line, r)
 	}
 	return fmt.Sprintf("%v\n", r)
