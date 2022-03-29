@@ -32,11 +32,13 @@ package recovery
 
 import (
 	"context"
+	"fmt"
 	"github.com/Zzaniu/zrpc/tool/zlog"
-	"golang.org/x/xerrors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"runtime"
+	"strings"
 )
 
 // UnaryRecoverInterceptor TODO 没有堆栈信息
@@ -56,6 +58,18 @@ func handleCrash(handler func(interface{})) {
 }
 
 func toPanicError(r interface{}) error {
-	zlog.Errorf("%+v\n\n%s", xerrors.Errorf("%w", r))
+	zlog.Errorf("\n%v", getWhere(r))
 	return status.Errorf(codes.Internal, "panic: %v", r)
+}
+
+func getWhere(r interface{}) string {
+	pc, file, line, ok := runtime.Caller(5)
+	if ok {
+		fn := runtime.FuncForPC(pc).Name()
+		fns := strings.Split(fn, ".")
+		fn = fns[len(fns)-1]
+
+		return fmt.Sprintf("    %v:%v %v\n", file, line, r)
+	}
+	return fmt.Sprintf("%v\n", r)
 }
