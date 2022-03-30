@@ -28,7 +28,7 @@ Desc   :
 
 */
 
-package resover
+package resolver
 
 import (
 	"context"
