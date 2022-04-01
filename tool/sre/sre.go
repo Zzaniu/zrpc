@@ -6,13 +6,7 @@ import (
 	"math"
 	"math/rand"
 	"sync"
-	"sync/atomic"
 	"time"
-)
-
-const (
-	StateOpen int32 = iota
-	StateClosed
 )
 
 var ErrNotAllowed = errors.New("circuitbreaker: not allowed for circuit open")
@@ -22,7 +16,6 @@ type SreBreaker struct {
 	k      float64
 	policy window.Rolling
 
-	state    int32  // 开启还是关闭
 	request  uint64 // 如果请求总数小于这个数的话, 不开启熔断. 一般是几个
 	r        *rand.Rand
 	randLock sync.Mutex
@@ -34,10 +27,8 @@ func (s *SreBreaker) Allow() error {
 	requests := s.k * float64(accept)
 	if reqTotal < s.request || float64(reqTotal) < requests {
 		// 如果 s.state 等于 StateOpen 则更新为 StateClosed
-		atomic.CompareAndSwapInt32(&s.state, StateOpen, StateClosed)
 		return nil
 	}
-	atomic.CompareAndSwapInt32(&s.state, StateClosed, StateOpen)
 	dr := math.Max(0, (float64(reqTotal)-requests)/float64(reqTotal+1))
 	if dr <= 0 {
 		return nil
@@ -71,6 +62,5 @@ func NewSreBreaker() *SreBreaker {
 		request: 5,
 		r:       rand.New(rand.NewSource(time.Now().UnixNano())),
 		policy:  window.NewRollingPolicy(),
-		state:   StateClosed,
 	}
 }
