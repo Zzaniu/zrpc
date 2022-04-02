@@ -90,7 +90,9 @@ func (rabbitProduct *RbMqClient) connect(addr string) bool {
 	); err != nil {
 		zlog.Fatalf("交换机`%v`声明失败, err = %+v\n", rabbitProduct.rbInfo.ExchangeName, xerrors.Errorf("%w", err))
 	}
+	var args map[string]interface{}
 	if len(rabbitProduct.rbInfo.DeadExchangeName) > 0 && len(rabbitProduct.rbInfo.DeadQueueName) > 0 {
+		args = map[string]interface{}{"x-dead-letter-exchange": rabbitProduct.rbInfo.DeadExchangeName}
 		// 声明死信交换机
 		if err = ch.ExchangeDeclare(
 			rabbitProduct.rbInfo.DeadExchangeName,
@@ -129,7 +131,7 @@ func (rabbitProduct *RbMqClient) connect(addr string) bool {
 		false,
 		false,
 		false,
-		map[string]interface{}{"x-dead-letter-exchange": rabbitProduct.rbInfo.DeadExchangeName}, // 为队列绑定死信交换机
+		args, // 为队列绑定死信交换机
 	); err != nil {
 		zlog.Fatalf("队列`%v`声明失败, err = %+v\n", rabbitProduct.rbInfo.QueueName, xerrors.Errorf("%w", err))
 	}
