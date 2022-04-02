@@ -9,24 +9,77 @@ import (
 	"path"
 )
 
-type MailInfo struct {
-	Mail Mail `json:"mail"`
+type (
+	MailInfo struct {
+		Mail Mail `json:"mail"`
+	}
+
+	Mail struct {
+		To         string      `json:"to"`
+		Cc         string      `json:"cc"`
+		Bcc        string      `json:"bcc"`
+		Title      string      `json:"title"`
+		Body       string      `json:"body"`
+		Attachment [][2]string `json:"attachment"`
+		Foreign    bool        `json:"foreign"`
+	}
+
+	Opt struct {
+		Cc       string
+		Bcc      string
+		filePath []string
+		Foreign  bool
+		FileInfo map[string][]byte
+	}
+
+	Option func(opt *Opt)
+)
+
+// WithCc 抄送
+func WithCc(cc string) Option {
+	return func(opt *Opt) {
+		opt.Cc = cc
+	}
 }
 
-type Mail struct {
-	To         string      `json:"to"`
-	Cc         string      `json:"cc"`
-	Bcc        string      `json:"bcc"`
-	Title      string      `json:"title"`
-	Body       string      `json:"body"`
-	Attachment [][2]string `json:"attachment"`
-	Foreign    bool        `json:"foreign"`
+// WithBcc 密送
+func WithBcc(bcc string) Option {
+	return func(opt *Opt) {
+		opt.Bcc = bcc
+	}
+}
+
+// WithForeign 签名, false 时使用对内签名
+func WithForeign(foreign bool) Option {
+	return func(opt *Opt) {
+		opt.Foreign = foreign
+	}
+}
+
+// WithFilePath 根据路径发送附件
+func WithFilePath(filePath []string) Option {
+	return func(opt *Opt) {
+		opt.filePath = filePath
+	}
+}
+
+// WithFileInfo 根据二进制数据发送邮件
+func WithFileInfo(fileInfo map[string][]byte) Option {
+	return func(opt *Opt) {
+		opt.FileInfo = fileInfo
+	}
 }
 
 // SendMail 基于路径发送邮件附件
-func SendMail(product *rabbit.RbMqClient, to, cc, bcc, title, body string, filePath []string, foreign bool) (bool, error) {
+func SendMail(product *rabbit.RbMqClient, to, title, body string, opts ...Option) (bool, error) {
+	opt := Opt{}
+
+	for _, o := range opts {
+		o(&opt)
+	}
+
 	var attachment [][2]string
-	for _, fileName := range filePath {
+	for _, fileName := range opt.filePath {
 		file, err := ioutil.ReadFile(fileName)
 		if err != nil {
 			return false, xerrors.Errorf("ioutil.ReadFile error, err = %w", err)
@@ -34,26 +87,11 @@ func SendMail(product *rabbit.RbMqClient, to, cc, bcc, title, body string, fileP
 		fileStr := base64.StdEncoding.EncodeToString(file)
 		attachment = append(attachment, [2]string{path.Base(fileName), fileStr})
 	}
-	m := MailInfo{Mail: Mail{To: to, Cc: cc, Bcc: bcc, Title: title, Body: body, Attachment: attachment, Foreign: foreign}}
-	mStr, err := json.Marshal(m)
-	if err != nil {
-		return false, xerrors.Errorf("json.Marshal error, err = %w", err)
-	}
-	if product.Publish(mStr) {
-		return true, nil
-	} else {
-		return false, nil
-	}
-}
-
-// SendMailByte 基于二进制数据发送邮件附件
-func SendMailByte(product *rabbit.RbMqClient, to, cc, bcc, title, body string, fileInfo map[string][]byte, foreign bool) (bool, error) {
-	var attachment [][2]string
-	for fineName, fileContent := range fileInfo {
+	for fineName, fileContent := range opt.FileInfo {
 		fileStr := base64.StdEncoding.EncodeToString(fileContent)
 		attachment = append(attachment, [2]string{fineName, fileStr})
 	}
-	m := MailInfo{Mail: Mail{To: to, Cc: cc, Bcc: bcc, Title: title, Body: body, Attachment: attachment, Foreign: foreign}}
+	m := MailInfo{Mail: Mail{To: to, Cc: opt.Cc, Bcc: opt.Bcc, Title: title, Body: body, Attachment: attachment, Foreign: opt.Foreign}}
 	mStr, err := json.Marshal(m)
 	if err != nil {
 		return false, xerrors.Errorf("json.Marshal error, err = %w", err)

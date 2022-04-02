@@ -12,14 +12,23 @@ import (
 var ErrNotAllowed = errors.New("circuitbreaker: not allowed for circuit open")
 
 // SreBreaker google sre 弹性熔断器
-type SreBreaker struct {
-	k      float64
-	policy window.Rolling
+type (
+	SreBreaker struct {
+		k      float64
+		policy window.Rolling
 
-	request  uint64 // 如果请求总数小于这个数的话, 不开启熔断. 一般是几个
-	r        *rand.Rand
-	randLock sync.Mutex
-}
+		request  uint64 // 如果请求总数小于这个数的话, 不开启熔断. 一般是几个
+		r        *rand.Rand
+		randLock sync.Mutex
+	}
+	Opt struct {
+		k       float64
+		request uint64
+		policy  window.Rolling
+	}
+
+	Option func(*Opt)
+)
 
 // Allow 是否允许改请求通过, 如果返回 error 说明被熔断了
 func (s *SreBreaker) Allow() error {
@@ -56,11 +65,38 @@ func (s *SreBreaker) trueOnProba(proba float64) (truth bool) {
 	return
 }
 
-func NewSreBreaker() *SreBreaker {
-	return &SreBreaker{
-		k:       1 / 0.8, // 10个里面允许有2个异常
+func WithK(k float64) Option {
+	return func(opt *Opt) {
+		opt.k = k
+	}
+}
+
+func WithRequest(request uint64) Option {
+	return func(opt *Opt) {
+		opt.request = request
+	}
+}
+
+func WithPolicy(policy *window.RollingPolicy) Option {
+	return func(opt *Opt) {
+		opt.policy = policy
+	}
+}
+
+func NewSreBreaker(opts ...Option) *SreBreaker {
+	opt := Opt{
+		k:       1 / 0.8,
 		request: 5,
-		r:       rand.New(rand.NewSource(time.Now().UnixNano())),
 		policy:  window.NewRollingPolicy(),
 	}
+	for _, o := range opts {
+		o(&opt)
+	}
+	return &SreBreaker{
+		k:       opt.k, // 10个里面允许有2个异常
+		request: opt.request,
+		r:       rand.New(rand.NewSource(time.Now().UnixNano())),
+		policy:  opt.policy,
+	}
+
 }
