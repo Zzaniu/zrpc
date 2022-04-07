@@ -50,6 +50,8 @@ type (
 
 	option struct {
 		registerServiceUri string
+		userName           string
+		passWord           string
 		ttl                int64
 		maxRetry           int
 		ctx                context.Context
@@ -78,6 +80,18 @@ func WithCancelCtx(ctx context.Context, cancel context.CancelFunc) Option {
 	}
 }
 
+func WithUsername(userName string) Option {
+	return func(o *option) {
+		o.userName = userName
+	}
+}
+
+func WithPassword(passWord string) Option {
+	return func(o *option) {
+		o.passWord = passWord
+	}
+}
+
 func NewRegisterEtcd(options ...Option) (*RegisterEtcd, error) {
 	opt := option{
 		ttl:      10,
@@ -90,6 +104,8 @@ func NewRegisterEtcd(options ...Option) (*RegisterEtcd, error) {
 	etcdClient, err := clientv3.New(clientv3.Config{
 		Endpoints:   strings.Split(opt.registerServiceUri, ","),
 		DialTimeout: 1 * time.Second,
+		Username:    opt.userName,
+		Password:    opt.passWord,
 	})
 	if err != nil {
 		return nil, err

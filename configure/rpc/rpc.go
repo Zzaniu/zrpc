@@ -86,6 +86,8 @@ func (s *ServerConf) GetServiceName() string {
 func (s *ServerConf) MustNewRegister() register.IRegister {
 	registerEtcd, err := etcd.NewRegisterEtcd(
 		etcd.WithTTL(5),
+		etcd.WithUsername(s.User),
+		etcd.WithPassword(s.Pass),
 		etcd.WithRegisterServiceUri(s.Hosts),
 		etcd.WithCancelCtx(context.WithCancel(context.Background())),
 	)
@@ -110,6 +112,8 @@ func (c *ClientConf) MustNewDiscovery() register.IDiscovery {
 	discovery, err := etcd.NewRegisterEtcd(
 		etcd.WithTTL(5),
 		etcd.WithRegisterServiceUri(c.Hosts),
+		etcd.WithUsername(c.User),
+		etcd.WithPassword(c.Pass),
 		etcd.WithCancelCtx(context.WithCancel(context.Background())),
 	)
 	if err != nil {
