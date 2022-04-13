@@ -66,9 +66,10 @@ func main() {
 	}
 
 	// target := "discovery://172.18.2.249:20000,172.18.2.249:20002,172.18.2.249:20004/Dev/user.rpc"
-	userClientConn := zrpc.MustNewClientConn(cfg, cfg.UserServerName)
+	userClient := zrpc.MustNewClient(cfg, cfg.UserServerName)
+	fmt.Println("userClient.GetTarget() = ", userClient.GetTarget())
 	addClientConn := zrpc.MustNewClientConn(cfg, cfg.AddServerName)
-	UserRpc := proto2.NewGreeterClient(userClientConn)
+	UserRpc := proto2.NewGreeterClient(userClient.Coon())
 	AddRpc := proto2.NewAddServerClient(addClientConn)
 
 	for {

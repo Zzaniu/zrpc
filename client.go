@@ -48,9 +48,10 @@ import (
 
 type (
 	Client struct {
-		discovery register.IDiscovery
-		target    string
-		option    clientOption
+		discovery  register.IDiscovery
+		serverName string
+		target     string
+		option     clientOption
 	}
 
 	clientOption struct {
@@ -61,11 +62,25 @@ type (
 	COption func(*clientOption)
 )
 
-// MustNewClientConn 新建一个 Client 实例
-func MustNewClientConn(rpcClient rpc.Client, serverName string, opts ...COption) *grpc.ClientConn {
+func (c *Client) Coon() *grpc.ClientConn {
+	ctx, cancelFunc := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancelFunc()
+	coon, err := grpc.DialContext(ctx, c.target, c.option.opts...)
+	if err != nil {
+		panic(fmt.Sprintf("连接超时, serverName = %v, target = %v, err = %v\n", c.serverName, c.target, err))
+	}
+	return coon
+}
+
+func (c *Client) GetTarget() string {
+	return c.target
+}
+
+func MustNewClient(rpcClient rpc.Client, serverName string, opts ...COption) *Client {
 	client := &Client{
-		discovery: rpcClient.MustNewDiscovery(),
-		target:    rpcClient.GetTarget(serverName),
+		discovery:  rpcClient.MustNewDiscovery(),
+		serverName: serverName,
+		target:     rpcClient.BuildTarget(serverName),
 		option: clientOption{
 			clientInterceptor: []grpc.UnaryClientInterceptor{
 				tracer.ClientTraceInterceptor, // 链路追踪拦截器
@@ -97,15 +112,13 @@ func MustNewClientConn(rpcClient rpc.Client, serverName string, opts ...COption)
 
 	// 添加 链路追踪拦截器、请求超时拦截器， 以及用户传入的拦截器
 	WithDialOption(withUnaryClientInterceptors(client.option.clientInterceptor...))(&client.option)
+	return client
+}
 
-	// 连接超时使用context, 看源码可知 grpc.WithTimeout() 被弃用了
-	ctx, cancelFunc := context.WithTimeout(context.Background(), time.Second*5)
-	defer cancelFunc()
-	coon, err := grpc.DialContext(ctx, client.target, client.option.opts...)
-	if err != nil {
-		panic(fmt.Sprintf("连接超时, serverName = %v, target = %v, err = %v\n", serverName, client.target, err))
-	}
-	return coon
+// MustNewClientConn 新建一个 Client 实例
+func MustNewClientConn(rpcClient rpc.Client, serverName string, opts ...COption) *grpc.ClientConn {
+	client := MustNewClient(rpcClient, serverName, opts...)
+	return client.Coon()
 }
 
 // BalancerOption 负载均衡

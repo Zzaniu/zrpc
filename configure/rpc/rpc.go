@@ -65,7 +65,7 @@ type (
 
 	Client interface {
 		HasEtcd() bool
-		GetTarget(string) string
+		BuildTarget(string) string
 		NoBlock() bool
 		TimeOut() int
 		MustNewDiscovery() register.IDiscovery
@@ -102,8 +102,8 @@ func (s *ServerConf) GetEndpoint() string {
 	return s.Endpoint
 }
 
-// GetTarget 返回一个用来做服务发现的 target
-func (c *ClientConf) GetTarget(serverName string) string {
+// BuildTarget 返回一个用来做服务发现的 target
+func (c *ClientConf) BuildTarget(serverName string) string {
 	return fmt.Sprintf("discovery://%s/%s/%s", c.EtcdConf.Hosts, c.Model, serverName)
 }
 
