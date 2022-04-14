@@ -31,67 +31,67 @@ Desc   :
 package redis
 
 import (
-	"github.com/Zzaniu/zrpc/tool/zlog"
-	"strings"
-	"sync"
-	"time"
+    "github.com/Zzaniu/zrpc/tool/zlog"
+    "strings"
+    "sync"
+    "time"
 
-	"github.com/go-redis/redis"
+    "github.com/go-redis/redis"
 )
 
 type (
-	Redis struct {
-		URI  string `yaml:"URI"`
-		Auth string `yaml:"Auth"`
-		Db   int    `yaml:"Db"`
-		Type string `yaml:"Type"`
-	}
+    Redis struct {
+        URI  string `yaml:"URI"`
+        Auth string `yaml:"Auth"`
+        Db   int    `yaml:"Db"`
+        Type string `yaml:"Type"`
+    }
 )
 
 var (
-	cacheOnce    sync.Once
-	cache        *redis.Client
-	clusterCache *redis.ClusterClient
-	redisClient  *Redis
+    cacheOnce    sync.Once
+    cache        *redis.Client
+    clusterCache *redis.ClusterClient
+    redisClient  *Redis
 )
 
 func (rds *Redis) Init() {
-	cacheOnce.Do(func() {
-		switch rds.Type {
-		case "cluster":
-			clusterCache = redis.NewClusterClient(&redis.ClusterOptions{
-				Addrs:        strings.Split(rds.URI, ","),
-				Password:     rds.Auth,
-				DialTimeout:  50 * time.Millisecond, // 设置连接超时
-				ReadTimeout:  50 * time.Millisecond, // 设置读取超时
-				WriteTimeout: 50 * time.Millisecond, // 设置写入超时
-				PoolSize:     1,
-				MinIdleConns: 0,
-			})
-			_, err := clusterCache.Ping().Result()
-			if err != nil {
-				zlog.Fatalf("redis cluster ping failed: %v", err)
-			}
-		default:
-			cache = redis.NewClient(&redis.Options{
-				Addr:     rds.URI,
-				Password: rds.Auth, // no password set
-				DB:       rds.Db,   // use default DB
-			})
-			_, err := cache.Ping().Result()
-			if err != nil {
-				zlog.Fatalf("redis ping failed: %v", err)
-			}
-		}
-	})
+    cacheOnce.Do(func() {
+        switch rds.Type {
+        case "cluster":
+            clusterCache = redis.NewClusterClient(&redis.ClusterOptions{
+                Addrs:        strings.Split(rds.URI, ","),
+                Password:     rds.Auth,
+                DialTimeout:  50 * time.Millisecond, // 设置连接超时
+                ReadTimeout:  50 * time.Millisecond, // 设置读取超时
+                WriteTimeout: 50 * time.Millisecond, // 设置写入超时
+                PoolSize:     1,
+                MinIdleConns: 0,
+            })
+            _, err := clusterCache.Ping().Result()
+            if err != nil {
+                zlog.Fatalf("redis cluster ping failed: %v", err)
+            }
+        default:
+            cache = redis.NewClient(&redis.Options{
+                Addr:     rds.URI,
+                Password: rds.Auth, // no password set
+                DB:       rds.Db,   // use default DB
+            })
+            _, err := cache.Ping().Result()
+            if err != nil {
+                zlog.Fatalf("redis ping failed: %v", err)
+            }
+        }
+    })
 }
 
 // GetCache 返回缓存实例
 func GetCache() redis.Cmdable {
-	switch redisClient.Type {
-	case "cluster":
-		return clusterCache
-	default:
-		return cache
-	}
+    switch redisClient.Type {
+    case "cluster":
+        return clusterCache
+    default:
+        return cache
+    }
 }

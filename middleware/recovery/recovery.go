@@ -31,40 +31,40 @@ Desc   :
 package recovery
 
 import (
-	"context"
-	"fmt"
-	"github.com/Zzaniu/zrpc/tool/zlog"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-	"runtime"
+    "context"
+    "fmt"
+    "github.com/Zzaniu/zrpc/tool/zlog"
+    "google.golang.org/grpc"
+    "google.golang.org/grpc/codes"
+    "google.golang.org/grpc/status"
+    "runtime"
 )
 
 // UnaryRecoverInterceptor TODO 没有堆栈信息
 func UnaryRecoverInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo,
-	handler grpc.UnaryHandler) (resp interface{}, err error) {
-	defer handleCrash(func(r interface{}) {
-		err = toPanicError(r)
-	})
+    handler grpc.UnaryHandler) (resp interface{}, err error) {
+    defer handleCrash(func(r interface{}) {
+        err = toPanicError(r)
+    })
 
-	return handler(ctx, req)
+    return handler(ctx, req)
 }
 
 func handleCrash(handler func(interface{})) {
-	if r := recover(); r != nil {
-		handler(r)
-	}
+    if r := recover(); r != nil {
+        handler(r)
+    }
 }
 
 func toPanicError(r interface{}) error {
-	zlog.Errorf("\n%v", getWhere(r))
-	return status.Errorf(codes.Internal, "panic: %v", r)
+    zlog.Errorf("\n%v", getWhere(r))
+    return status.Errorf(codes.Internal, "panic: %v", r)
 }
 
 func getWhere(r interface{}) string {
-	_, file, line, ok := runtime.Caller(5)
-	if ok {
-		return fmt.Sprintf("    %v:%v %v\n", file, line, r)
-	}
-	return fmt.Sprintf("%v\n", r)
+    _, file, line, ok := runtime.Caller(5)
+    if ok {
+        return fmt.Sprintf("    %v:%v %v\n", file, line, r)
+    }
+    return fmt.Sprintf("%v\n", r)
 }

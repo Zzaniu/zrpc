@@ -31,42 +31,42 @@ Desc   :
 package configure
 
 import (
-	"github.com/Zzaniu/zrpc/tool/zlog"
-	"gopkg.in/yaml.v2"
-	"io/ioutil"
+    "github.com/Zzaniu/zrpc/tool/zlog"
+    "gopkg.in/yaml.v2"
+    "io/ioutil"
 )
 
 const (
-	Dev    = "Dev"
-	Test   = "Test"
-	Online = "Online"
+    Dev    = "Dev"
+    Test   = "Test"
+    Online = "Online"
 )
 
 type (
-	Jwt struct {
-		Secret              string `yaml:"Secret"`
-		TokenExpireDuration int    `yaml:"TokenExpireDuration"`
-	}
+    Jwt struct {
+        Secret              string `yaml:"Secret"`
+        TokenExpireDuration int    `yaml:"TokenExpireDuration"`
+    }
 
-	EtcdConf struct {
-		Hosts string `yaml:"Hosts"`
-		User  string `yaml:"User"`
-		Pass  string `yaml:"Pass"`
-	}
+    EtcdConf struct {
+        Hosts string `yaml:"Hosts"`
+        User  string `yaml:"User"`
+        Pass  string `yaml:"Pass"`
+    }
 )
 
 // HasEtcd 是否有 Etcd (目前还没啥用啊，因为目前是写死了支持etcd)
 func (e *EtcdConf) HasEtcd() bool {
-	return len(e.Hosts) > 0
+    return len(e.Hosts) > 0
 }
 
 func MustLoadCfg(path string, config interface{}) {
-	content, err := ioutil.ReadFile(path)
-	if err != nil {
-		zlog.Fatalf("read cfg file fail: %v", err)
-	}
-	err = yaml.Unmarshal(content, config)
-	if err != nil {
-		zlog.Fatalf("read cfg file fail: %v", err)
-	}
+    content, err := ioutil.ReadFile(path)
+    if err != nil {
+        zlog.Fatalf("read cfg file fail: %v", err)
+    }
+    err = yaml.Unmarshal(content, config)
+    if err != nil {
+        zlog.Fatalf("read cfg file fail: %v", err)
+    }
 }

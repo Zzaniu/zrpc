@@ -31,16 +31,16 @@ Desc   :
 package balancer
 
 import (
-	"github.com/Zzaniu/zrpc/middleware/balancer/p2c"
-	"google.golang.org/grpc/balancer"
-	"google.golang.org/grpc/balancer/base"
+    "github.com/Zzaniu/zrpc/middleware/balancer/p2c"
+    "google.golang.org/grpc/balancer"
+    "google.golang.org/grpc/balancer/base"
 )
 
 // 注册全局 balancer
 func init() {
-	balancer.Register(newBalancer(p2c.Name, new(p2c.PickerBuilderP2c), base.Config{HealthCheck: true}))
+    balancer.Register(newBalancer(p2c.Name, new(p2c.PickerBuilderP2c), base.Config{HealthCheck: true}))
 }
 
 func newBalancer(name string, builder base.PickerBuilder, config base.Config) balancer.Builder {
-	return base.NewBalancerBuilder(name, builder, config)
+    return base.NewBalancerBuilder(name, builder, config)
 }

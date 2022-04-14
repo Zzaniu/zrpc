@@ -31,127 +31,127 @@ Desc   :
 package ztracer
 
 import (
-	"context"
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/baggage"
-	"go.opentelemetry.io/otel/exporters/jaeger"
-	"go.opentelemetry.io/otel/propagation"
-	"go.opentelemetry.io/otel/sdk/resource"
-	tracesdk "go.opentelemetry.io/otel/sdk/trace"
-	semconv "go.opentelemetry.io/otel/semconv/v1.7.0"
-	"go.opentelemetry.io/otel/trace"
-	"google.golang.org/grpc/metadata"
-	"google.golang.org/grpc/peer"
+    "context"
+    "go.opentelemetry.io/otel"
+    "go.opentelemetry.io/otel/attribute"
+    "go.opentelemetry.io/otel/baggage"
+    "go.opentelemetry.io/otel/exporters/jaeger"
+    "go.opentelemetry.io/otel/propagation"
+    "go.opentelemetry.io/otel/sdk/resource"
+    tracesdk "go.opentelemetry.io/otel/sdk/trace"
+    semconv "go.opentelemetry.io/otel/semconv/v1.7.0"
+    "go.opentelemetry.io/otel/trace"
+    "google.golang.org/grpc/metadata"
+    "google.golang.org/grpc/peer"
 )
 
 // assert that metadataSupplier implements the TextMapCarrier interface
 var _ propagation.TextMapCarrier = new(metadataSupplier)
 
 type (
-	// Trace 一个大的系统就用一个就行了, 不然显示就会有好几个, 但是数据却是重复的
-	Trace struct {
-		Endpoint string `yaml:"Endpoint"`
-		Name     string `yaml:"Name"`
-		Model    string `yaml:"Model"`
-	}
+    // Trace 一个大的系统就用一个就行了, 不然显示就会有好几个, 但是数据却是重复的
+    Trace struct {
+        Endpoint string `yaml:"Endpoint"`
+        Name     string `yaml:"Name"`
+        Model    string `yaml:"Model"`
+    }
 
-	Option struct {
-		Name string `yaml:"Name"`
-	}
+    Option struct {
+        Name string `yaml:"Name"`
+    }
 
-	metadataSupplier struct {
-		metadata *metadata.MD
-	}
+    metadataSupplier struct {
+        metadata *metadata.MD
+    }
 )
 
 func (s *metadataSupplier) Get(key string) string {
-	values := s.metadata.Get(key)
-	if len(values) == 0 {
-		return ""
-	}
+    values := s.metadata.Get(key)
+    if len(values) == 0 {
+        return ""
+    }
 
-	return values[0]
+    return values[0]
 }
 
 func (s *metadataSupplier) Set(key, value string) {
-	s.metadata.Set(key, value)
+    s.metadata.Set(key, value)
 }
 
 func (s *metadataSupplier) Keys() []string {
-	out := make([]string, 0, len(*s.metadata))
-	for key := range *s.metadata {
-		out = append(out, key)
-	}
+    out := make([]string, 0, len(*s.metadata))
+    for key := range *s.metadata {
+        out = append(out, key)
+    }
 
-	return out
+    return out
 }
 
 // Inject injects the metadata into ctx.
 func Inject(ctx context.Context, p propagation.TextMapPropagator, metadata *metadata.MD) {
-	p.Inject(ctx, &metadataSupplier{
-		metadata: metadata,
-	})
+    p.Inject(ctx, &metadataSupplier{
+        metadata: metadata,
+    })
 }
 
 // Extract extracts the metadata from ctx.
 func Extract(ctx context.Context, p propagation.TextMapPropagator, metadata *metadata.MD) (
-	baggage.Baggage, trace.SpanContext) {
-	ctx = p.Extract(ctx, &metadataSupplier{
-		metadata: metadata,
-	})
+    baggage.Baggage, trace.SpanContext) {
+    ctx = p.Extract(ctx, &metadataSupplier{
+        metadata: metadata,
+    })
 
-	return baggage.FromContext(ctx), trace.SpanContextFromContext(ctx)
+    return baggage.FromContext(ctx), trace.SpanContextFromContext(ctx)
 }
 
 // SetJaegerTracerProvider 官方栗子里面抄的, 按照 kratos 的改动了一丢丢
 // 设置一个全局的 Jaeger Tracer
 func SetJaegerTracerProvider(tra Trace) error {
-	// 创建 Jaeger 接收者
-	exp, err := jaeger.New(jaeger.WithCollectorEndpoint(jaeger.WithEndpoint(tra.Endpoint)))
-	if err != nil {
-		return err
-	}
-	tp := tracesdk.NewTracerProvider(
-		// 设置为1, 表示所有的都上报
-		tracesdk.WithSampler(tracesdk.ParentBased(tracesdk.TraceIDRatioBased(1.0))), // 设置为0则不上报
-		// 分批上报
-		tracesdk.WithBatcher(exp),
-		// 设置一些记录信息
-		tracesdk.WithResource(resource.NewSchemaless(
-			// 设置名字
-			semconv.ServiceNameKey.String(tra.Name),
-			// 设置环境名
-			attribute.String("env", tra.Model),
-		)),
-	)
-	// 设置全局 tracer
-	otel.SetTracerProvider(tp)
-	otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
-	return nil
+    // 创建 Jaeger 接收者
+    exp, err := jaeger.New(jaeger.WithCollectorEndpoint(jaeger.WithEndpoint(tra.Endpoint)))
+    if err != nil {
+        return err
+    }
+    tp := tracesdk.NewTracerProvider(
+        // 设置为1, 表示所有的都上报
+        tracesdk.WithSampler(tracesdk.ParentBased(tracesdk.TraceIDRatioBased(1.0))), // 设置为0则不上报
+        // 分批上报
+        tracesdk.WithBatcher(exp),
+        // 设置一些记录信息
+        tracesdk.WithResource(resource.NewSchemaless(
+            // 设置名字
+            semconv.ServiceNameKey.String(tra.Name),
+            // 设置环境名
+            attribute.String("env", tra.Model),
+        )),
+    )
+    // 设置全局 tracer
+    otel.SetTracerProvider(tp)
+    otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
+    return nil
 }
 
 func SpanInfo(fullMethod, peerAddress string) (string, []attribute.KeyValue) {
-	// 设置 rpc.system 属性为 grpc (自定义的, 可不设置. 但是设置了的话, 可以一下子看出来是 http 还是 grpc)
-	attrs := []attribute.KeyValue{RPCSystemGRPC}
-	name, mAttrs := ParseFullMethod(fullMethod)
-	attrs = append(attrs, mAttrs...)
-	attrs = append(attrs, PeerAttr(peerAddress)...)
-	return name, attrs
+    // 设置 rpc.system 属性为 grpc (自定义的, 可不设置. 但是设置了的话, 可以一下子看出来是 http 还是 grpc)
+    attrs := []attribute.KeyValue{RPCSystemGRPC}
+    name, mAttrs := ParseFullMethod(fullMethod)
+    attrs = append(attrs, mAttrs...)
+    attrs = append(attrs, PeerAttr(peerAddress)...)
+    return name, attrs
 }
 
 // PeerFromCtx returns the peer from ctx.
 func PeerFromCtx(ctx context.Context) string {
-	p, ok := peer.FromContext(ctx)
-	if !ok {
-		return ""
-	}
+    p, ok := peer.FromContext(ctx)
+    if !ok {
+        return ""
+    }
 
-	return p.Addr.String()
+    return p.Addr.String()
 }
 
 // GetTrace 获取 Tracer
 // 第一次会生成, 后续会直接使用
 func GetTrace() trace.Tracer {
-	return otel.Tracer(name)
+    return otel.Tracer(name)
 }

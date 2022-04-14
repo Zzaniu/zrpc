@@ -31,27 +31,27 @@ Desc   :
 package zlog
 
 import (
-	"errors"
-	"fmt"
-	"io/fs"
-	"io/ioutil"
-	"log"
-	"os"
-	"path"
-	"sort"
-	"time"
+    "errors"
+    "fmt"
+    "io/fs"
+    "io/ioutil"
+    "log"
+    "os"
+    "path"
+    "sort"
+    "time"
 )
 
 type (
-	fileInfo []fs.FileInfo
+    fileInfo []fs.FileInfo
 
-	FileManageOption struct {
-		keepCnt        int
-		cutIntervalDay int
-		cutSize        int64
-		cutInterval    time.Duration
-	}
-	FileManageOptions func(*FileManageOption)
+    FileManageOption struct {
+        keepCnt        int
+        cutIntervalDay int
+        cutSize        int64
+        cutInterval    time.Duration
+    }
+    FileManageOptions func(*FileManageOption)
 )
 
 func (f fileInfo) Len() int { return len(f) }
@@ -62,120 +62,120 @@ func (f fileInfo) Less(i, j int) bool { return f[i].Name() < f[j].Name() }
 func (f fileInfo) Swap(i, j int) { f[i], f[j] = f[j], f[i] }
 
 func WithKeepCnt(keepCnt int) FileManageOptions {
-	return func(option *FileManageOption) {
-		switch {
-		case keepCnt < 0:
-			keepCnt = 0
-		case keepCnt > 0 && keepCnt < 3:
-			keepCnt = 3
-		default:
-		}
-		option.keepCnt = keepCnt
-	}
+    return func(option *FileManageOption) {
+        switch {
+        case keepCnt < 0:
+            keepCnt = 0
+        case keepCnt > 0 && keepCnt < 3:
+            keepCnt = 3
+        default:
+        }
+        option.keepCnt = keepCnt
+    }
 }
 
 func WithCutSize(cutSize int64) FileManageOptions {
-	return func(option *FileManageOption) {
-		switch {
-		case cutSize < 0:
-			cutSize = 0
-		case cutSize > 0 && cutSize < 10:
-			cutSize = M10
-		default:
-		}
-		option.cutSize = cutSize
-	}
+    return func(option *FileManageOption) {
+        switch {
+        case cutSize < 0:
+            cutSize = 0
+        case cutSize > 0 && cutSize < 10:
+            cutSize = M10
+        default:
+        }
+        option.cutSize = cutSize
+    }
 }
 
 func WithCutIntervalDay(cutIntervalDay int) FileManageOptions {
-	return func(option *FileManageOption) {
-		switch {
-		case cutIntervalDay < 0:
-			cutIntervalDay = 0
-		default:
-		}
-		option.cutIntervalDay = cutIntervalDay
-	}
+    return func(option *FileManageOption) {
+        switch {
+        case cutIntervalDay < 0:
+            cutIntervalDay = 0
+        default:
+        }
+        option.cutIntervalDay = cutIntervalDay
+    }
 }
 
 func WithCutIntervalTime(cutInterval time.Duration) FileManageOptions {
-	return func(option *FileManageOption) {
-		switch {
-		case cutInterval < 0:
-			cutInterval = 0
-		case cutInterval > 0 && cutInterval < Hour:
-			cutInterval = Hour
-		default:
-		}
-		option.cutInterval = cutInterval
-	}
+    return func(option *FileManageOption) {
+        switch {
+        case cutInterval < 0:
+            cutInterval = 0
+        case cutInterval > 0 && cutInterval < Hour:
+            cutInterval = Hour
+        default:
+        }
+        option.cutInterval = cutInterval
+    }
 }
 
 func createLogFile(logFilePath string) (writerFile *os.File, err error) {
-	if len(logFilePath) == 0 {
-		return nil, errors.New(fmt.Sprintf("无文件名, logFilePath = %v", logFilePath))
-	}
-	for i := 0; i < 3; i++ {
-		writerFile, err = os.OpenFile(fmt.Sprintf("%v.%v.log", logFilePath, time.Now().Format("20060102150405")), FileStandard, 0755)
-		if err != nil {
-			log.Printf("创建文件失败, err = %v\n", err)
-			time.Sleep(time.Millisecond * 1)
-			continue
-		}
-		return
-	}
-	return
+    if len(logFilePath) == 0 {
+        return nil, errors.New(fmt.Sprintf("无文件名, logFilePath = %v", logFilePath))
+    }
+    for i := 0; i < 3; i++ {
+        writerFile, err = os.OpenFile(fmt.Sprintf("%v.%v.log", logFilePath, time.Now().Format("20060102150405")), FileStandard, 0755)
+        if err != nil {
+            log.Printf("创建文件失败, err = %v\n", err)
+            time.Sleep(time.Millisecond * 1)
+            continue
+        }
+        return
+    }
+    return
 }
 
 func mustCreateLogFile(logFilePath string) *os.File {
-	writerFile, err := createLogFile(logFilePath)
-	if err != nil {
-		log.Fatalf("create file %v failed: %v", logFilePath, err)
-	}
-	return writerFile
+    writerFile, err := createLogFile(logFilePath)
+    if err != nil {
+        log.Fatalf("create file %v failed: %v", logFilePath, err)
+    }
+    return writerFile
 }
 
 func Rename(filePath string) (err error) {
-	for i := 0; i < 3; i++ {
-		err = os.Rename(fmt.Sprintf("%v.log", filePath), fmt.Sprintf("%v.%v.log", filePath, time.Now().Format("20060102150405")))
-		if err != nil {
-			log.Printf("重命名失败, err = %v\n", err)
-			time.Sleep(time.Millisecond * 1)
-			continue
-		}
-		return
-	}
-	return
+    for i := 0; i < 3; i++ {
+        err = os.Rename(fmt.Sprintf("%v.log", filePath), fmt.Sprintf("%v.%v.log", filePath, time.Now().Format("20060102150405")))
+        if err != nil {
+            log.Printf("重命名失败, err = %v\n", err)
+            time.Sleep(time.Millisecond * 1)
+            continue
+        }
+        return
+    }
+    return
 }
 
 func CleanHisLog(filePath string, keepCnt int) {
-	dirName := path.Dir(filePath)
-	files, err := ioutil.ReadDir(dirName)
-	if err != nil {
-		log.Printf("读取文件夹失败, err = %v\n", err)
-		return
-	}
+    dirName := path.Dir(filePath)
+    files, err := ioutil.ReadDir(dirName)
+    if err != nil {
+        log.Printf("读取文件夹失败, err = %v\n", err)
+        return
+    }
 
-	for i := 0; i < len(files); i++ {
-		if files[i].IsDir() {
-			if i == 0 {
-				files = files[1:]
-			} else if i == len(files)-1 {
-				files = files[:i]
-			} else {
-				files = append(files[:i], files[i+1:]...)
-			}
-		}
-	}
-	if len(files) < keepCnt {
-		return
-	}
-	sort.Sort(fileInfo(files))
-	files = files[:len(files)-keepCnt]
-	for _, file := range files {
-		err := os.Remove(path.Join(dirName, file.Name()))
-		if err != nil {
-			log.Printf("删除文件失败, err = %v", err)
-		}
-	}
+    for i := 0; i < len(files); i++ {
+        if files[i].IsDir() {
+            if i == 0 {
+                files = files[1:]
+            } else if i == len(files)-1 {
+                files = files[:i]
+            } else {
+                files = append(files[:i], files[i+1:]...)
+            }
+        }
+    }
+    if len(files) < keepCnt {
+        return
+    }
+    sort.Sort(fileInfo(files))
+    files = files[:len(files)-keepCnt]
+    for _, file := range files {
+        err := os.Remove(path.Join(dirName, file.Name()))
+        if err != nil {
+            log.Printf("删除文件失败, err = %v", err)
+        }
+    }
 }

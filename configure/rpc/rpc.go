@@ -31,104 +31,104 @@ Desc   :
 package rpc
 
 import (
-	"context"
-	"fmt"
-	"github.com/Zzaniu/zrpc/configure"
-	"github.com/Zzaniu/zrpc/middleware/register"
-	"github.com/Zzaniu/zrpc/middleware/register/etcd"
+    "context"
+    "fmt"
+    "github.com/Zzaniu/zrpc/configure"
+    "github.com/Zzaniu/zrpc/middleware/register"
+    "github.com/Zzaniu/zrpc/middleware/register/etcd"
 )
 
 const clientTimeOut = 3000
 
 type (
-	ServerConf struct {
-		configure.EtcdConf `yaml:"Etcd"`
-		ServerName         string `yaml:"ServerName"`
-		Endpoint           string `yaml:"Endpoint"`
-		Model              string `yaml:"Model"`
-	}
+    ServerConf struct {
+        configure.EtcdConf `yaml:"Etcd"`
+        ServerName         string `yaml:"ServerName"`
+        Endpoint           string `yaml:"Endpoint"`
+        Model              string `yaml:"Model"`
+    }
 
-	ClientConf struct {
-		configure.EtcdConf `yaml:"Etcd"`
-		NonBlock           bool   `yaml:"NonBlock"`
-		Model              string `yaml:"Model"`
-		Timeout            int    `yaml:"Timeout"`
-	}
+    ClientConf struct {
+        configure.EtcdConf `yaml:"Etcd"`
+        NonBlock           bool   `yaml:"NonBlock"`
+        Model              string `yaml:"Model"`
+        Timeout            int    `yaml:"Timeout"`
+    }
 
-	Server interface {
-		HasEtcd() bool
-		GetNamespace() string
-		GetServiceName() string
-		GetEndpoint() string
-		MustNewRegister() register.IRegister
-	}
+    Server interface {
+        HasEtcd() bool
+        GetNamespace() string
+        GetServiceName() string
+        GetEndpoint() string
+        MustNewRegister() register.IRegister
+    }
 
-	Client interface {
-		HasEtcd() bool
-		BuildTarget(string) string
-		NoBlock() bool
-		TimeOut() int
-		MustNewDiscovery() register.IDiscovery
-	}
+    Client interface {
+        HasEtcd() bool
+        BuildTarget(string) string
+        NoBlock() bool
+        TimeOut() int
+        MustNewDiscovery() register.IDiscovery
+    }
 )
 
 // GetNamespace 返回 namespace
 func (s *ServerConf) GetNamespace() string {
-	return s.Model
+    return s.Model
 }
 
 // GetServiceName 返回服务名
 func (s *ServerConf) GetServiceName() string {
-	return s.ServerName
+    return s.ServerName
 }
 
 // MustNewRegister new 一个注册器
 func (s *ServerConf) MustNewRegister() register.IRegister {
-	registerEtcd, err := etcd.NewRegisterEtcd(
-		etcd.WithTTL(5),
-		etcd.WithUsername(s.User),
-		etcd.WithPassword(s.Pass),
-		etcd.WithRegisterServiceUri(s.Hosts),
-		etcd.WithCancelCtx(context.WithCancel(context.Background())),
-	)
-	if err != nil {
-		panic(err)
-	}
-	return registerEtcd
+    registerEtcd, err := etcd.NewRegisterEtcd(
+        etcd.WithTTL(5),
+        etcd.WithUsername(s.User),
+        etcd.WithPassword(s.Pass),
+        etcd.WithRegisterServiceUri(s.Hosts),
+        etcd.WithCancelCtx(context.WithCancel(context.Background())),
+    )
+    if err != nil {
+        panic(err)
+    }
+    return registerEtcd
 }
 
 // GetEndpoint 返回服务的监听IP与PORT
 func (s *ServerConf) GetEndpoint() string {
-	return s.Endpoint
+    return s.Endpoint
 }
 
 // BuildTarget 返回一个用来做服务发现的 target
 func (c *ClientConf) BuildTarget(serverName string) string {
-	return fmt.Sprintf("discovery://%s/%s/%s", c.EtcdConf.Hosts, c.Model, serverName)
+    return fmt.Sprintf("discovery://%s/%s/%s", c.EtcdConf.Hosts, c.Model, serverName)
 }
 
 // MustNewDiscovery new 一个 Discovery
 func (c *ClientConf) MustNewDiscovery() register.IDiscovery {
-	discovery, err := etcd.NewRegisterEtcd(
-		etcd.WithTTL(5),
-		etcd.WithRegisterServiceUri(c.Hosts),
-		etcd.WithUsername(c.User),
-		etcd.WithPassword(c.Pass),
-		etcd.WithCancelCtx(context.WithCancel(context.Background())),
-	)
-	if err != nil {
-		panic(err)
-	}
-	return discovery
+    discovery, err := etcd.NewRegisterEtcd(
+        etcd.WithTTL(5),
+        etcd.WithRegisterServiceUri(c.Hosts),
+        etcd.WithUsername(c.User),
+        etcd.WithPassword(c.Pass),
+        etcd.WithCancelCtx(context.WithCancel(context.Background())),
+    )
+    if err != nil {
+        panic(err)
+    }
+    return discovery
 }
 
 func (c *ClientConf) TimeOut() int {
-	if c.Timeout == 0 {
-		return clientTimeOut
-	}
-	return c.Timeout
+    if c.Timeout == 0 {
+        return clientTimeOut
+    }
+    return c.Timeout
 }
 
 func (c *ClientConf) NoBlock() bool {
-	return c.NonBlock
+    return c.NonBlock
 }

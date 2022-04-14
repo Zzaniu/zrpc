@@ -3,10 +3,10 @@
 package proto
 
 import (
-	context "context"
-	grpc "google.golang.org/grpc"
-	codes "google.golang.org/grpc/codes"
-	status "google.golang.org/grpc/status"
+    context "context"
+    grpc "google.golang.org/grpc"
+    codes "google.golang.org/grpc/codes"
+    status "google.golang.org/grpc/status"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -18,34 +18,34 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type GreeterClient interface {
-	// Sends a greeting
-	SayHello(ctx context.Context, in *HelloRequest, opts ...grpc.CallOption) (*HelloReply, error)
+    // Sends a greeting
+    SayHello(ctx context.Context, in *HelloRequest, opts ...grpc.CallOption) (*HelloReply, error)
 }
 
 type greeterClient struct {
-	cc grpc.ClientConnInterface
+    cc grpc.ClientConnInterface
 }
 
 func NewGreeterClient(cc grpc.ClientConnInterface) GreeterClient {
-	return &greeterClient{cc}
+    return &greeterClient{cc}
 }
 
 func (c *greeterClient) SayHello(ctx context.Context, in *HelloRequest, opts ...grpc.CallOption) (*HelloReply, error) {
-	out := new(HelloReply)
-	err := c.cc.Invoke(ctx, "/Greeter/SayHello", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
+    out := new(HelloReply)
+    err := c.cc.Invoke(ctx, "/Greeter/SayHello", in, out, opts...)
+    if err != nil {
+        return nil, err
+    }
+    return out, nil
 }
 
 // GreeterServer is the server API for Greeter service.
 // All implementations must embed UnimplementedGreeterServer
 // for forward compatibility
 type GreeterServer interface {
-	// Sends a greeting
-	SayHello(context.Context, *HelloRequest) (*HelloReply, error)
-	mustEmbedUnimplementedGreeterServer()
+    // Sends a greeting
+    SayHello(context.Context, *HelloRequest) (*HelloReply, error)
+    mustEmbedUnimplementedGreeterServer()
 }
 
 // UnimplementedGreeterServer must be embedded to have forward compatible implementations.
@@ -53,7 +53,7 @@ type UnimplementedGreeterServer struct {
 }
 
 func (UnimplementedGreeterServer) SayHello(context.Context, *HelloRequest) (*HelloReply, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SayHello not implemented")
+    return nil, status.Errorf(codes.Unimplemented, "method SayHello not implemented")
 }
 func (UnimplementedGreeterServer) mustEmbedUnimplementedGreeterServer() {}
 
@@ -61,88 +61,88 @@ func (UnimplementedGreeterServer) mustEmbedUnimplementedGreeterServer() {}
 // Use of this interface is not recommended, as added methods to GreeterServer will
 // result in compilation errors.
 type UnsafeGreeterServer interface {
-	mustEmbedUnimplementedGreeterServer()
+    mustEmbedUnimplementedGreeterServer()
 }
 
 func RegisterGreeterServer(s grpc.ServiceRegistrar, srv GreeterServer) {
-	s.RegisterService(&Greeter_ServiceDesc, srv)
+    s.RegisterService(&Greeter_ServiceDesc, srv)
 }
 
 func _Greeter_SayHello_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(HelloRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(GreeterServer).SayHello(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/Greeter/SayHello",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GreeterServer).SayHello(ctx, req.(*HelloRequest))
-	}
-	return interceptor(ctx, in, info, handler)
+    in := new(HelloRequest)
+    if err := dec(in); err != nil {
+        return nil, err
+    }
+    if interceptor == nil {
+        return srv.(GreeterServer).SayHello(ctx, in)
+    }
+    info := &grpc.UnaryServerInfo{
+        Server:     srv,
+        FullMethod: "/Greeter/SayHello",
+    }
+    handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+        return srv.(GreeterServer).SayHello(ctx, req.(*HelloRequest))
+    }
+    return interceptor(ctx, in, info, handler)
 }
 
 // Greeter_ServiceDesc is the grpc.ServiceDesc for Greeter service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var Greeter_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "Greeter",
-	HandlerType: (*GreeterServer)(nil),
-	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "SayHello",
-			Handler:    _Greeter_SayHello_Handler,
-		},
-	},
-	Streams:  []grpc.StreamDesc{},
-	Metadata: "helloworld.proto",
+    ServiceName: "Greeter",
+    HandlerType: (*GreeterServer)(nil),
+    Methods: []grpc.MethodDesc{
+        {
+            MethodName: "SayHello",
+            Handler:    _Greeter_SayHello_Handler,
+        },
+    },
+    Streams:  []grpc.StreamDesc{},
+    Metadata: "helloworld.proto",
 }
 
 // AddServerClient is the client API for AddServer service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type AddServerClient interface {
-	AddInt(ctx context.Context, in *AddIntRequest, opts ...grpc.CallOption) (*AddIntReply, error)
-	AddFloat(ctx context.Context, in *AddFloatRequest, opts ...grpc.CallOption) (*AddFloatReply, error)
+    AddInt(ctx context.Context, in *AddIntRequest, opts ...grpc.CallOption) (*AddIntReply, error)
+    AddFloat(ctx context.Context, in *AddFloatRequest, opts ...grpc.CallOption) (*AddFloatReply, error)
 }
 
 type addServerClient struct {
-	cc grpc.ClientConnInterface
+    cc grpc.ClientConnInterface
 }
 
 func NewAddServerClient(cc grpc.ClientConnInterface) AddServerClient {
-	return &addServerClient{cc}
+    return &addServerClient{cc}
 }
 
 func (c *addServerClient) AddInt(ctx context.Context, in *AddIntRequest, opts ...grpc.CallOption) (*AddIntReply, error) {
-	out := new(AddIntReply)
-	err := c.cc.Invoke(ctx, "/AddServer/AddInt", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
+    out := new(AddIntReply)
+    err := c.cc.Invoke(ctx, "/AddServer/AddInt", in, out, opts...)
+    if err != nil {
+        return nil, err
+    }
+    return out, nil
 }
 
 func (c *addServerClient) AddFloat(ctx context.Context, in *AddFloatRequest, opts ...grpc.CallOption) (*AddFloatReply, error) {
-	out := new(AddFloatReply)
-	err := c.cc.Invoke(ctx, "/AddServer/AddFloat", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
+    out := new(AddFloatReply)
+    err := c.cc.Invoke(ctx, "/AddServer/AddFloat", in, out, opts...)
+    if err != nil {
+        return nil, err
+    }
+    return out, nil
 }
 
 // AddServerServer is the server API for AddServer service.
 // All implementations must embed UnimplementedAddServerServer
 // for forward compatibility
 type AddServerServer interface {
-	AddInt(context.Context, *AddIntRequest) (*AddIntReply, error)
-	AddFloat(context.Context, *AddFloatRequest) (*AddFloatReply, error)
-	mustEmbedUnimplementedAddServerServer()
+    AddInt(context.Context, *AddIntRequest) (*AddIntReply, error)
+    AddFloat(context.Context, *AddFloatRequest) (*AddFloatReply, error)
+    mustEmbedUnimplementedAddServerServer()
 }
 
 // UnimplementedAddServerServer must be embedded to have forward compatible implementations.
@@ -150,10 +150,10 @@ type UnimplementedAddServerServer struct {
 }
 
 func (UnimplementedAddServerServer) AddInt(context.Context, *AddIntRequest) (*AddIntReply, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AddInt not implemented")
+    return nil, status.Errorf(codes.Unimplemented, "method AddInt not implemented")
 }
 func (UnimplementedAddServerServer) AddFloat(context.Context, *AddFloatRequest) (*AddFloatReply, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AddFloat not implemented")
+    return nil, status.Errorf(codes.Unimplemented, "method AddFloat not implemented")
 }
 func (UnimplementedAddServerServer) mustEmbedUnimplementedAddServerServer() {}
 
@@ -161,65 +161,65 @@ func (UnimplementedAddServerServer) mustEmbedUnimplementedAddServerServer() {}
 // Use of this interface is not recommended, as added methods to AddServerServer will
 // result in compilation errors.
 type UnsafeAddServerServer interface {
-	mustEmbedUnimplementedAddServerServer()
+    mustEmbedUnimplementedAddServerServer()
 }
 
 func RegisterAddServerServer(s grpc.ServiceRegistrar, srv AddServerServer) {
-	s.RegisterService(&AddServer_ServiceDesc, srv)
+    s.RegisterService(&AddServer_ServiceDesc, srv)
 }
 
 func _AddServer_AddInt_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AddIntRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AddServerServer).AddInt(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/AddServer/AddInt",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AddServerServer).AddInt(ctx, req.(*AddIntRequest))
-	}
-	return interceptor(ctx, in, info, handler)
+    in := new(AddIntRequest)
+    if err := dec(in); err != nil {
+        return nil, err
+    }
+    if interceptor == nil {
+        return srv.(AddServerServer).AddInt(ctx, in)
+    }
+    info := &grpc.UnaryServerInfo{
+        Server:     srv,
+        FullMethod: "/AddServer/AddInt",
+    }
+    handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+        return srv.(AddServerServer).AddInt(ctx, req.(*AddIntRequest))
+    }
+    return interceptor(ctx, in, info, handler)
 }
 
 func _AddServer_AddFloat_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AddFloatRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AddServerServer).AddFloat(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/AddServer/AddFloat",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AddServerServer).AddFloat(ctx, req.(*AddFloatRequest))
-	}
-	return interceptor(ctx, in, info, handler)
+    in := new(AddFloatRequest)
+    if err := dec(in); err != nil {
+        return nil, err
+    }
+    if interceptor == nil {
+        return srv.(AddServerServer).AddFloat(ctx, in)
+    }
+    info := &grpc.UnaryServerInfo{
+        Server:     srv,
+        FullMethod: "/AddServer/AddFloat",
+    }
+    handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+        return srv.(AddServerServer).AddFloat(ctx, req.(*AddFloatRequest))
+    }
+    return interceptor(ctx, in, info, handler)
 }
 
 // AddServer_ServiceDesc is the grpc.ServiceDesc for AddServer service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var AddServer_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "AddServer",
-	HandlerType: (*AddServerServer)(nil),
-	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "AddInt",
-			Handler:    _AddServer_AddInt_Handler,
-		},
-		{
-			MethodName: "AddFloat",
-			Handler:    _AddServer_AddFloat_Handler,
-		},
-	},
-	Streams:  []grpc.StreamDesc{},
-	Metadata: "helloworld.proto",
+    ServiceName: "AddServer",
+    HandlerType: (*AddServerServer)(nil),
+    Methods: []grpc.MethodDesc{
+        {
+            MethodName: "AddInt",
+            Handler:    _AddServer_AddInt_Handler,
+        },
+        {
+            MethodName: "AddFloat",
+            Handler:    _AddServer_AddFloat_Handler,
+        },
+    },
+    Streams:  []grpc.StreamDesc{},
+    Metadata: "helloworld.proto",
 }
