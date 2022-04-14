@@ -65,11 +65,11 @@ func (r *RedisCache) random100() int {
 
 // Store 执行 set key value ex nx
 // 不允许缓存不设置过期时间
-func (r *RedisCache) store(key string, value interface{}, expiration int) (bool, error) {
+func (r *RedisCache) store(key string, value interface{}, expiration time.Duration) (bool, error) {
     if len(key) == 0 {
         return false, nil
     }
-    result, err := r.client.SetNX(key, value, time.Duration(expiration+r.random100())*time.Second).Result()
+    result, err := r.client.SetNX(key, value, expiration).Result()
     if err != nil {
         return false, xerrors.Errorf("Store SetNX error: %w", err)
     }
@@ -78,7 +78,7 @@ func (r *RedisCache) store(key string, value interface{}, expiration int) (bool,
 
 // Get 如果缓存不存在, 执行 set key value ex nx, 如果缓存是 invalidCacheCode, 执行 set key value ex
 // 如果缓存无效或不存在, 会执行传入的函数去获取数据, 然后存到缓存
-func (r *RedisCache) Get(key string, f func() (string, error)) (string, error) {
+func (r *RedisCache) Get(key string, f func() (string, error), opts ...cache.Opts) (string, error) {
     doRet, err, _ := r.singleFlight.Do(fmt.Sprintf("Get:%s", key), func() (interface{}, error) {
 
         sha, ok := redisGetScriptSha.Load().(string)
@@ -101,7 +101,17 @@ func (r *RedisCache) Get(key string, f func() (string, error)) (string, error) {
             if err != nil {
                 return nil, err
             }
-            ret, err := r.store(key, result, SevenDayInt+r.random100())
+
+            opt := cache.Option{
+                Timeout:       time.Duration(SevenDayInt) * time.Second,
+                RandomTimeout: time.Duration(r.random100()) * time.Second,
+            }
+
+            for _, o := range opts {
+                o(&opt)
+            }
+
+            ret, err := r.store(key, result, opt.Timeout+opt.RandomTimeout)
             if err != nil {
                 return nil, err
             }
