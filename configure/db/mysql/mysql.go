@@ -48,20 +48,72 @@ type (
         Password string `yaml:"Password"`
         Database string `yaml:"Database"`
     }
+
+    Option struct {
+        config          gorm.Config
+        MaxIdleConns    int
+        MaxOpenConns    int
+        ConnMaxIdleTime time.Duration
+        ConnMaxLifetime time.Duration
+    }
+
+    Opts func(*Option)
 )
 
 var (
     mysqlOnce sync.Once
-    gdb       *gorm.DB
+    dbConn    gorm.DB
 )
 
-// NewMysqlDb 初始化数据库
-func NewMysqlDb(msl Mysql) *gorm.DB {
+func WithGormOption(config gorm.Config) Opts {
+    return func(opt *Option) {
+        opt.config = config
+    }
+}
+
+func WithMaxIdleConns(maxIdleConns int) Opts {
+    return func(opt *Option) {
+        opt.MaxIdleConns = maxIdleConns
+    }
+}
+
+func WithMaxOpenConns(maxOpenConns int) Opts {
+    return func(opt *Option) {
+        opt.MaxOpenConns = maxOpenConns
+    }
+}
+
+func WithConnMaxIdleTime(connMaxIdleTime time.Duration) Opts {
+    return func(opt *Option) {
+        opt.ConnMaxIdleTime = connMaxIdleTime
+    }
+}
+
+func WithConnMaxLifetime(connMaxLifetime time.Duration) Opts {
+    return func(opt *Option) {
+        opt.ConnMaxLifetime = connMaxLifetime
+    }
+}
+
+// Init 初始化数据库
+func (msl *Mysql) Init(opts ...Opts) {
     mysqlOnce.Do(func() {
-        var err error
         str := "%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=true&loc=Local"
         dsn := fmt.Sprintf(str, msl.Username, msl.Password, msl.Host, msl.Port, msl.Database)
-        gdb, err = gorm.Open(mysql.Open(dsn), &gorm.Config{Logger: logger.Default.LogMode(logger.Info)})
+
+        opt := Option{
+            config:          gorm.Config{Logger: logger.Default.LogMode(logger.Info)},
+            MaxIdleConns:    50,
+            MaxOpenConns:    100,
+            ConnMaxIdleTime: 30 * time.Minute,
+            ConnMaxLifetime: 3 * time.Hour,
+        }
+
+        for _, o := range opts {
+            o(&opt)
+        }
+
+        gdb, err := gorm.Open(mysql.Open(dsn), &opt.config)
         if err != nil {
             zlog.Fatalf("mysql gorm.Open failed: %v", err)
         }
@@ -70,14 +122,18 @@ func NewMysqlDb(msl Mysql) *gorm.DB {
         if err != nil {
             zlog.Fatalf("mysql gdb.DB failed: %v", err)
         }
-        db.SetMaxIdleConns(50)                  // 空闲
-        db.SetMaxOpenConns(100)                 // 打开
-        db.SetConnMaxIdleTime(time.Minute * 30) // 空闲超时
-        db.SetConnMaxLifetime(time.Hour * 3)    // 超时
+        db.SetMaxIdleConns(opt.MaxIdleConns)       // 空闲
+        db.SetMaxOpenConns(opt.MaxOpenConns)       // 打开
+        db.SetConnMaxIdleTime(opt.ConnMaxIdleTime) // 空闲超时
+        db.SetConnMaxLifetime(opt.ConnMaxLifetime) // 超时
         err = db.Ping()
         if err != nil {
             zlog.Fatalf("mysql db.Ping failed: %v", err)
         }
+        dbConn = *gdb
     })
-    return gdb
+}
+
+func GetDb() gorm.DB {
+    return dbConn
 }

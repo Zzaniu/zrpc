@@ -46,6 +46,14 @@ type (
         Db   int    `yaml:"Db"`
         Type string `yaml:"Type"`
     }
+
+    Option struct {
+        dialTimeout  time.Duration
+        readTimeout  time.Duration
+        writeTimeout time.Duration
+    }
+
+    Opts func(*Option)
 )
 
 var (
@@ -55,16 +63,44 @@ var (
     redisClient  *Redis
 )
 
-func (rds *Redis) Init() {
+func WithDialTimeout(dialTimeout time.Duration) Opts {
+    return func(opt *Option) {
+        opt.dialTimeout = dialTimeout
+    }
+}
+
+func WithReadTimeout(readTimeout time.Duration) Opts {
+    return func(opt *Option) {
+        opt.readTimeout = readTimeout
+    }
+}
+
+func WithWriteTimeout(writeTimeout time.Duration) Opts {
+    return func(opt *Option) {
+        opt.writeTimeout = writeTimeout
+    }
+}
+
+func (rds *Redis) Init(opts ...Opts) {
     cacheOnce.Do(func() {
+        opt := Option{
+            dialTimeout:  50 * time.Millisecond, // 设置连接超时
+            readTimeout:  50 * time.Millisecond, // 设置读取超时
+            writeTimeout: 50 * time.Millisecond, // 设置写入超时
+        }
+
+        for _, o := range opts {
+            o(&opt)
+        }
+
         switch rds.Type {
         case "cluster":
             clusterCache = redis.NewClusterClient(&redis.ClusterOptions{
                 Addrs:        strings.Split(rds.URI, ","),
                 Password:     rds.Auth,
-                DialTimeout:  50 * time.Millisecond, // 设置连接超时
-                ReadTimeout:  50 * time.Millisecond, // 设置读取超时
-                WriteTimeout: 50 * time.Millisecond, // 设置写入超时
+                DialTimeout:  opt.dialTimeout,  // 设置连接超时
+                ReadTimeout:  opt.readTimeout,  // 设置读取超时
+                WriteTimeout: opt.writeTimeout, // 设置写入超时
                 PoolSize:     1,
                 MinIdleConns: 0,
             })
@@ -74,9 +110,12 @@ func (rds *Redis) Init() {
             }
         default:
             cache = redis.NewClient(&redis.Options{
-                Addr:     rds.URI,
-                Password: rds.Auth, // no password set
-                DB:       rds.Db,   // use default DB
+                Addr:         rds.URI,
+                Password:     rds.Auth,         // no password set
+                DialTimeout:  opt.dialTimeout,  // 设置连接超时
+                ReadTimeout:  opt.readTimeout,  // 设置读取超时
+                WriteTimeout: opt.writeTimeout, // 设置写入超时
+                DB:           rds.Db,           // use default DB
             })
             _, err := cache.Ping().Result()
             if err != nil {
