@@ -88,9 +88,11 @@ func NewSreBreaker(opts ...Option) *SreBreaker {
         k:       1 / 0.8,
         request: 5,
     }
+
     for _, o := range opts {
         o(&opt)
     }
+
     return &SreBreaker{
         k:       opt.k, // 10个里面允许有2个异常
         request: opt.request,

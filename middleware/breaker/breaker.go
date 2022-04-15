@@ -81,7 +81,7 @@ func (g *SreBreakerGroup) Get(key string) Breaker {
 }
 
 func (g *SreBreakerGroup) new() Breaker {
-    breaker := sre.NewSreBreaker()
+    breaker := sre.NewSreBreaker(g.opt...)
     return breaker
 }
 
