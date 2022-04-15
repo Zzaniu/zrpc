@@ -85,7 +85,7 @@ func (g *SreBreakerGroup) new() Breaker {
     return breaker
 }
 
-func newSreBreakerGroup() Group {
+func NewSreBreakerGroup() Group {
     return &SreBreakerGroup{breakers: make(map[string]Breaker)}
 }
 
@@ -112,7 +112,7 @@ func ClientBreakInterceptor(ctx context.Context, method string, req, reply inter
 
 // WithServerBreakerInterceptor rpc 服务端熔断器
 func WithServerBreakerInterceptor() grpc.UnaryServerInterceptor {
-    breakGroup := newSreBreakerGroup()
+    breakGroup := NewSreBreakerGroup()
     return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo,
         handler grpc.UnaryHandler) (interface{}, error) {
         // 跟gin一样, 首先判断熔断器是否打开, 打开则直接返回，未打开则允许通过并记录返回是否OK
