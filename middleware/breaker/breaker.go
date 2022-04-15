@@ -32,13 +32,11 @@ package breaker
 
 import (
     "context"
-    "fmt"
     "github.com/Zzaniu/zrpc/tool/sre"
     "github.com/Zzaniu/zrpc/tool/zlog"
     "github.com/Zzaniu/zrpc/utils/errcode"
     "google.golang.org/grpc"
     "google.golang.org/grpc/codes"
-    "google.golang.org/grpc/metadata"
     "google.golang.org/grpc/status"
     "sync"
 )
@@ -87,20 +85,6 @@ func (g *SreBreakerGroup) new() Breaker {
 
 func NewSreBreakerGroup() Group {
     return &SreBreakerGroup{breakers: make(map[string]Breaker)}
-}
-
-func ExampleInterceptor(ctx context.Context, method string, req, reply interface{},
-    cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
-    fmt.Printf("method = %v, type = %T\n", method, method)
-    fmt.Printf("req = %v, type = %T\n", req, req)
-    fmt.Printf("reply = %v, type = %T\n", reply, reply)
-    fmt.Printf("opts = %v, type = %T\n", opts, opts)
-
-    ctx = metadata.AppendToOutgoingContext(ctx, "token", "123456")
-    err := invoker(ctx, method, req, reply, cc, opts...)
-    fmt.Println("err = ", err)
-    fmt.Println("reply = ", reply)
-    return err
 }
 
 // ClientBreakInterceptor 客户端熔断器
