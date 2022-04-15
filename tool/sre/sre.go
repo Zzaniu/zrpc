@@ -24,7 +24,7 @@ type (
     Opt struct {
         k       float64
         request uint64
-        policy  window.Rolling
+        opts    []window.Option
     }
 
     Option func(*Opt)
@@ -77,9 +77,9 @@ func WithRequest(request uint64) Option {
     }
 }
 
-func WithPolicy(policy *window.RollingPolicy) Option {
+func WithPolicyOption(policy ...window.Option) Option {
     return func(opt *Opt) {
-        opt.policy = policy
+        opt.opts = append(opt.opts, policy...)
     }
 }
 
@@ -87,7 +87,6 @@ func NewSreBreaker(opts ...Option) *SreBreaker {
     opt := Opt{
         k:       1 / 0.8,
         request: 5,
-        policy:  window.NewRollingPolicy(),
     }
     for _, o := range opts {
         o(&opt)
@@ -96,7 +95,7 @@ func NewSreBreaker(opts ...Option) *SreBreaker {
         k:       opt.k, // 10个里面允许有2个异常
         request: opt.request,
         r:       rand.New(rand.NewSource(time.Now().UnixNano())),
-        policy:  opt.policy,
+        policy:  window.NewRollingPolicy(opt.opts...),
     }
 
 }

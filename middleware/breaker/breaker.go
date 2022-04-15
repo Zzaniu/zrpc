@@ -55,6 +55,8 @@ type (
     SreBreakerGroup struct {
         sync.RWMutex
         breakers map[string]Breaker
+
+        opt []sre.Option
     }
 )
 
@@ -83,8 +85,8 @@ func (g *SreBreakerGroup) new() Breaker {
     return breaker
 }
 
-func NewSreBreakerGroup() Group {
-    return &SreBreakerGroup{breakers: make(map[string]Breaker)}
+func NewSreBreakerGroup(opts ...sre.Option) Group {
+    return &SreBreakerGroup{breakers: make(map[string]Breaker), opt: opts}
 }
 
 // ClientBreakInterceptor 客户端熔断器
