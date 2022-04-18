@@ -60,7 +60,6 @@ var (
     cacheOnce    sync.Once
     cache        *redis.Client
     clusterCache *redis.ClusterClient
-    redisClient  *Redis
 )
 
 func WithDialTimeout(dialTimeout time.Duration) Opts {
@@ -126,8 +125,8 @@ func (rds *Redis) Init(opts ...Opts) {
 }
 
 // GetCache 返回缓存实例
-func GetCache() redis.Cmdable {
-    switch redisClient.Type {
+func (rds *Redis) GetCache() redis.Cmdable {
+    switch rds.Type {
     case "cluster":
         return clusterCache
     default:
