@@ -67,6 +67,7 @@ func main() {
 
     // target := "discovery://172.18.2.249:20000,172.18.2.249:20002,172.18.2.249:20004/Dev/user.rpc"
     userClient := zrpc.MustNewClient(cfg, cfg.UserServerName)
+    // 获取往 etcd 中注册的 uri
     fmt.Println("userClient.GetTarget() = ", userClient.GetTarget())
     addClientConn := zrpc.MustNewClientConn(cfg, cfg.AddServerName)
     UserRpc := proto2.NewGreeterClient(userClient.Coon())
