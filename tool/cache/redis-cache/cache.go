@@ -31,13 +31,30 @@ const (
                                 redis.call("DEL", KEYS[1])
                             end
                             return ret`
+    // 在 set 失败的时候, 返回值是 bool, 在 set 成功时, 需要用 .ok 来判断
+    redisStoreScriptStr = `local invalidCode = ARGV[3]
+                            local ret1 = redis.call("set", KEYS[1], ARGV[1], "px", ARGV[2], "nx")
+                            if ret1 ~= false and ret1.ok == "OK" then
+                                return 1
+                            end
+                            local val = redis.call("get", KEYS[1])
+                            if val == ARGV[1] or val == invalidCode then
+                                return 1
+                            end
+                            local ret2 = redis.call("set", KEYS[1], invalidCode, "ex", 600)
+                            if ret2 ~= false and ret2.ok == "OK" then
+                                return 1
+                            end
+                            return 0`
 )
 
 var (
-    once              sync.Once
-    redisCache        *RedisCache
-    redisGetScript    = redis.NewScript(redisGetScriptStr)
-    redisGetScriptSha atomic.Value
+    once                sync.Once
+    redisCache          *RedisCache
+    redisGetScript      = redis.NewScript(redisGetScriptStr)
+    redisStoreScript    = redis.NewScript(redisStoreScriptStr)
+    redisGetScriptSha   atomic.Value
+    redisStoreScriptSha atomic.Value
 )
 
 type RedisCache struct {
@@ -63,17 +80,32 @@ func (r *RedisCache) random100() int {
     return redisExpireBase + r.random.Intn(90)
 }
 
-// Store 执行 set key value ex nx
+// store 存储 value
 // 不允许缓存不设置过期时间
+// 要使用 lua 脚本去处理, 如果 setnx 失败, 比对一下缓存里面和当前 value 是否一致, 不一致需要设置成无效状态,
+// 如果发现缓存里面的已经被设置为无效状态了或者 value 是一致的, 那么直接忽略
 func (r *RedisCache) store(key string, value interface{}, expiration time.Duration) (bool, error) {
     if len(key) == 0 {
         return false, nil
     }
-    result, err := r.client.SetNX(key, value, expiration).Result()
+
+    sha, ok := redisStoreScriptSha.Load().(string)
+    if !ok {
+        var err error
+        sha, err = redisStoreScript.Load(r.client).Result()
+        if err != nil {
+            return false, xerrors.Errorf("Get Load error: %w", err)
+        }
+        redisStoreScriptSha.Store(sha)
+    }
+
+    result, err := r.client.EvalSha(sha, []string{key}, value, int64(expiration/time.Millisecond), invalidCacheCode).Result()
     if err != nil {
         return false, xerrors.Errorf("Store SetNX error: %w", err)
     }
-    return result, nil
+
+    ret := result.(int64) == 1
+    return ret, nil
 }
 
 // Get 如果缓存不存在, 执行 set key value ex nx, 如果缓存是 invalidCacheCode, 执行 set key value ex
