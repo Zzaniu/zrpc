@@ -184,7 +184,7 @@ func (r *RedisCache) MGet(keys ...string) ([]interface{}, error) {
 // Del 软删除, 就是设置一下状态为 invalidCacheCode
 func (r *RedisCache) Del(key string) (bool, error) {
     doRet, err, _ := r.singleFlight.Do(fmt.Sprintf("Del:%s", key), func() (interface{}, error) {
-        result, err := r.client.Set(key, invalidCacheCode, TenMinute).Result()
+        result, err := r.client.Set(key, invalidCacheCode, time.Minute).Result()
         if err != nil {
             return false, xerrors.Errorf("Del Set error: %w", err)
         }
@@ -210,7 +210,7 @@ func (r *RedisCache) MDel(keys ...string) ([]bool, error) {
 
     pipeline := r.client.Pipeline()
     for _, key := range keys {
-        pipeline.Set(key, invalidCacheCode, TenMinute)
+        pipeline.Set(key, invalidCacheCode, time.Minute)
     }
     res, err := pipeline.Exec()
     if err != nil {
