@@ -46,7 +46,7 @@ func (r *Lru) Get(i interface{}, fn NewLruElement) *Element {
     element, exists = r.m.Get(i)
     if exists {
         r.moveToFront(element.(*list.Element))
-        r.lock.RUnlock()
+        r.lock.Unlock()
         return element.(*list.Element).Value.(*Element)
     }
 
