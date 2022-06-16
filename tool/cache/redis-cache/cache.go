@@ -16,7 +16,7 @@ import (
 const (
     invalidCacheCode  = "-410" // 无效的缓存
     redisOK           = "OK"
-    redisBulkNum      = 10
+    redisBulkNum      = 100
     redisExpireBase   = 10
     TenMinute         = time.Minute * 10
     ThirtyMinute      = time.Minute * 30
@@ -71,11 +71,12 @@ func NewRedisCache(client redis.Cmdable) cache.Cache {
     return redisCache
 }
 
-// randomSecond100 10-100以内的随机时间
+// randomSecond100 10-100以内的随机时间秒
 func (r *RedisCache) randomSecond100() time.Duration {
-    return time.Second * time.Duration(redisExpireBase+r.random.Intn(90))
+    return time.Second * time.Duration(r.random100())
 }
 
+// random100 10-100以内的随机数
 func (r *RedisCache) random100() int {
     return redisExpireBase + r.random.Intn(90)
 }
