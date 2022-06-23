@@ -64,6 +64,7 @@ func NewResolverBuilderEtcd(discoverer register.IDiscovery) resolver.Builder {
 }
 
 // Build 做一些解析，解析ETCD的地址，从ETCD解析到RPC的地址，用cc.UpdateState更新RPC地址, 执行 grpc.dial 的时候调用
+// 参见源码: grpc-go clientconn.go DialContext 297 ( rWrapper, err := newCCResolverWrapper(cc, resolverBuilder) )
 func (b *ResolverBuilderEtcd) Build(target resolver.Target, cc resolver.ClientConn, opts resolver.BuildOptions) (resolver.Resolver, error) {
     var (
         err error

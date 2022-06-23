@@ -26,6 +26,7 @@ const (
     ThreeDay          = OneDay * 3
     SevenDay          = OneDay * 7
     SevenDayInt       = 60 * 60 * 24 * 7
+    placeholderTime   = time.Minute
     redisGetScriptStr = `local ret = redis.call("GET", KEYS[1])
                             if ret == ARGV[1] then
                                 redis.call("DEL", KEYS[1])
@@ -41,7 +42,7 @@ const (
                             if val == ARGV[1] or val == invalidCode then
                                 return 1
                             end
-                            local ret2 = redis.call("set", KEYS[1], invalidCode, "ex", 600)
+                            local ret2 = redis.call("set", KEYS[1], invalidCode, "ex", ARGV[4])
                             if ret2 ~= false and ret2.ok == "OK" then
                                 return 1
                             end
@@ -100,7 +101,7 @@ func (r *RedisCache) store(key string, value interface{}, expiration time.Durati
         redisStoreScriptSha.Store(sha)
     }
 
-    result, err := r.client.EvalSha(sha, []string{key}, value, int64(expiration/time.Millisecond), invalidCacheCode).Result()
+    result, err := r.client.EvalSha(sha, []string{key}, value, int64(expiration/time.Millisecond), invalidCacheCode, placeholderTime).Result()
     if err != nil {
         return false, xerrors.Errorf("Store SetNX error: %w", err)
     }
@@ -185,7 +186,7 @@ func (r *RedisCache) MGet(keys ...string) ([]interface{}, error) {
 // Del 软删除, 就是设置一下状态为 invalidCacheCode
 func (r *RedisCache) Del(key string) (bool, error) {
     doRet, err, _ := r.singleFlight.Do(fmt.Sprintf("Del:%s", key), func() (interface{}, error) {
-        result, err := r.client.Set(key, invalidCacheCode, time.Minute).Result()
+        result, err := r.client.Set(key, invalidCacheCode, placeholderTime).Result()
         if err != nil {
             return false, xerrors.Errorf("Del Set error: %w", err)
         }
@@ -211,7 +212,7 @@ func (r *RedisCache) MDel(keys ...string) ([]bool, error) {
 
     pipeline := r.client.Pipeline()
     for _, key := range keys {
-        pipeline.Set(key, invalidCacheCode, time.Minute)
+        pipeline.Set(key, invalidCacheCode, placeholderTime)
     }
     res, err := pipeline.Exec()
     if err != nil {

@@ -138,7 +138,7 @@ func WithClientInterceptor(clientInterceptor ...grpc.UnaryClientInterceptor) COp
     }
 }
 
-// withDiscovery 注册非全局的服务发现，此优先级高于全局注册
+// withDiscovery 注册非全局的服务发现，此优先级高于全局注册, 参见 grpc 源码 clientconn.go 中的 ClientConn 的方法 getResolver
 func withDiscovery(discoverer register.IDiscovery) grpc.DialOption {
     return grpc.WithResolvers(etcd.NewResolverBuilderEtcd(discoverer))
 }
