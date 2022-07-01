@@ -82,10 +82,9 @@ func (r *RedisCache) random100() int {
     return redisExpireBase + r.random.Intn(90)
 }
 
-// store 存储 value
-// 不允许缓存不设置过期时间
-// 要使用 lua 脚本去处理, 如果 setnx 失败, 比对一下缓存里面和当前 value 是否一致, 不一致需要设置成无效状态,
-// 如果发现缓存里面的已经被设置为无效状态了或者 value 是一致的, 那么直接忽略
+// store 存储 value, 使用 lua 脚本去处理, 不允许缓存不设置过期时间
+// 1. 如果 set px nx 失败, 比对一下缓存里面和当前 value 是否一致, 不一致需要 set ex 设置成无效状态
+// 2. 如果发现缓存里面的已经被设置为无效状态了或者 value 是一致的, 那么直接忽略
 func (r *RedisCache) store(key string, value interface{}, expiration time.Duration) (bool, error) {
     if len(key) == 0 {
         return false, nil
@@ -110,8 +109,8 @@ func (r *RedisCache) store(key string, value interface{}, expiration time.Durati
     return ret, nil
 }
 
-// Get 如果缓存不存在, 执行 set key value ex nx, 如果缓存是 invalidCacheCode, 执行 set key value ex
-// 如果缓存无效或不存在, 会执行传入的函数去获取数据, 然后存到缓存
+// Get 获取 value, 使用 lua 脚本去处理, 如果缓存不存在, 直接返回, 如果缓存是 invalidCacheCode, 执行 del key.
+// 如果在缓存中没有获取到数据, 则执行传入的函数去获取数据, 最后执行 set key value ex nx 存到缓存
 func (r *RedisCache) Get(key string, f func() (string, error), opts ...cache.Opts) (string, error) {
     doRet, err, _ := r.singleFlight.Do(fmt.Sprintf("Get:%s", key), func() (interface{}, error) {
 
