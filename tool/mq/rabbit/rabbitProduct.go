@@ -25,7 +25,7 @@ type RbMqClient struct {
     done                chan struct{}
     coonNotifyClose     chan *amqp.Error
     coonNotifyConnected chan struct{}
-    callBack            func(amqp.Delivery) bool
+    callBack            func(amqp.Delivery)
 }
 
 func (rabbitProduct *RbMqClient) InitRabbitProduct() {
@@ -291,7 +291,7 @@ func (rabbitProduct *RbMqClient) Close() {
 }
 
 // NewAndInitRabbitClient 新建消费端(消费消息)
-func NewAndInitRabbitClient(rbInfo RbInfo, callBack func(amqp.Delivery) bool) (*RbMqClient, error) {
+func NewAndInitRabbitClient(rbInfo RbInfo, callBack func(amqp.Delivery)) (*RbMqClient, error) {
     if callBack == nil {
         return nil, CallBackError
     }

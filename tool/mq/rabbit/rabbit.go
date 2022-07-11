@@ -15,7 +15,7 @@ var (
     CallBackError = errors.New("消费回调函数不能为空")
 )
 
-func NewRabbitProduct(rbInfo RbInfo, callBack func(amqp.Delivery) bool) (*RbMqClient, error) {
+func NewRabbitProduct(rbInfo RbInfo, callBack func(amqp.Delivery)) (*RbMqClient, error) {
     if len(rbInfo.Addr) == 0 || len(rbInfo.ExchangeName) == 0 || len(rbInfo.QueueName) == 0 {
         return nil, ParamsError
     }
