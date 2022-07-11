@@ -279,11 +279,11 @@ func (rabbitProduct *RbMqClient) Close() {
 }
 
 // NewAndInitRabbitClient 新建消费端(消费消息)
-func NewAndInitRabbitClient(rbInfo RbInfo, callBack func(amqp.Delivery)) (*RbMqClient, error) {
+func NewAndInitRabbitClient(rbInfo RbInfo, callBack func(amqp.Delivery), opts ...DialOption) (*RbMqClient, error) {
     if callBack == nil {
         return nil, CallBackError
     }
-    product, err := NewRabbitProduct(rbInfo, callBack)
+    product, err := NewRabbitProduct(rbInfo, callBack, opts...)
     if err != nil {
         return nil, err
     }
@@ -293,8 +293,8 @@ func NewAndInitRabbitClient(rbInfo RbInfo, callBack func(amqp.Delivery)) (*RbMqC
 }
 
 // NewAndInitRabbitServer 新建服务端(发布消息)
-func NewAndInitRabbitServer(rbInfo RbInfo) (*RbMqClient, error) {
-    product, err := NewRabbitProduct(rbInfo, nil)
+func NewAndInitRabbitServer(rbInfo RbInfo, opts ...DialOption) (*RbMqClient, error) {
+    product, err := NewRabbitProduct(rbInfo, nil, opts...)
     if err != nil {
         return nil, err
     }
