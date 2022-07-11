@@ -9,7 +9,7 @@ import (
 type (
     NewLruElement func(interface{}) *Element
 
-    ILru interface {
+    Lru interface {
         length() int
         push(*Element) *list.Element
         Get(interface{}, NewLruElement) *Element
@@ -22,8 +22,8 @@ type (
         Val interface{}
     }
 
-    Lru struct {
-        lock         sync.RWMutex
+    lru struct {
+        sync.RWMutex
         lruMaxLength int
         list         *list.List
         m            safemap.SafeGcMap
@@ -32,21 +32,21 @@ type (
 
 // Get 获取一个元素, 如果没有的话就用 NewLruElement 新建一个
 // 如果已经超容量了, 就会触发清理, 将最近最少使用的元素移除(链表尾节点前移)
-func (r *Lru) Get(i interface{}, fn NewLruElement) *Element {
-    r.lock.RLock()
+func (r *lru) Get(i interface{}, fn NewLruElement) *Element {
+    r.RLock()
     element, exists := r.m.Get(i)
     if exists {
         r.moveToFront(element.(*list.Element))
-        r.lock.RUnlock()
+        r.RUnlock()
         return element.(*list.Element).Value.(*Element)
     }
-    r.lock.RUnlock()
+    r.RUnlock()
 
-    r.lock.Lock()
+    r.Lock()
     element, exists = r.m.Get(i)
     if exists {
         r.moveToFront(element.(*list.Element))
-        r.lock.Unlock()
+        r.Unlock()
         return element.(*list.Element).Value.(*Element)
     }
 
@@ -57,12 +57,12 @@ func (r *Lru) Get(i interface{}, fn NewLruElement) *Element {
     if t != nil {
         r.m.Del(t.(*Element).Key)
     }
-    r.lock.Unlock()
+    r.Unlock()
     return ele
 }
 
 // Length 链表长度
-func (r *Lru) length() int {
+func (r *lru) length() int {
     if r.list == nil {
         return 0
     }
@@ -70,7 +70,7 @@ func (r *Lru) length() int {
 }
 
 // Push 存数据
-func (r *Lru) push(ele *Element) *list.Element {
+func (r *lru) push(ele *Element) *list.Element {
     if r.list == nil {
         return nil
     }
@@ -78,7 +78,7 @@ func (r *Lru) push(ele *Element) *list.Element {
 }
 
 // MoveToFront 移动到链表头
-func (r *Lru) moveToFront(e *list.Element) {
+func (r *lru) moveToFront(e *list.Element) {
     if r.list == nil {
         return
     }
@@ -87,7 +87,7 @@ func (r *Lru) moveToFront(e *list.Element) {
 
 // Clean 执行清理, 删除将链表尾的数据(链表尾指针往前移动)
 // 非线程安全的, 因为只在get中用, 同时get中又有锁, 所以这里没加锁
-func (r *Lru) clean() interface{} {
+func (r *lru) clean() interface{} {
     if r.list == nil || r.length() <= r.lruMaxLength {
         return nil
     }
@@ -95,11 +95,11 @@ func (r *Lru) clean() interface{} {
     return v
 }
 
-func NewLru(lruMaxLength int, mThresholdFactor float32) ILru {
+func NewLru(lruMaxLength int, mThresholdFactor float32) Lru {
     if mThresholdFactor < 2 {
         mThresholdFactor = 2
     }
-    return &Lru{
+    return &lru{
         lruMaxLength: lruMaxLength,
         list:         list.New(),
         m:            safemap.NewAutoGcMap(lruMaxLength+1, int(mThresholdFactor*float32(lruMaxLength)+0.5)),
