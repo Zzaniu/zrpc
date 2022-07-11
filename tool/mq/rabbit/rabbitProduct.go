@@ -5,28 +5,19 @@ import (
     "github.com/Zzaniu/zrpc/tool/zlog"
     "github.com/streadway/amqp"
     "golang.org/x/xerrors"
-    "strconv"
     "time"
 )
 
-type RbInfo struct {
-    Addr             string
-    ExchangeName     string
-    QueueName        string
-    RouteKey         string
-    DeadExchangeName string
-    DeadQueueName    string
-    DeadRouteKey     string
-}
-
-type RbMqClient struct {
-    rbInfo              RbInfo
-    connection          *amqp.Connection
-    done                chan struct{}
-    coonNotifyClose     chan *amqp.Error
-    coonNotifyConnected chan struct{}
-    callBack            func(amqp.Delivery)
-}
+type (
+    RbMqClient struct {
+        rbInfo              RbInfo
+        connection          *amqp.Connection
+        done                chan struct{}
+        coonNotifyClose     chan *amqp.Error
+        coonNotifyConnected chan struct{}
+        callBack            func(amqp.Delivery)
+    }
+)
 
 func (rabbitProduct *RbMqClient) InitRabbitProduct() {
     go rabbitProduct.handleReconnect()
@@ -43,7 +34,7 @@ func (rabbitProduct *RbMqClient) handleReconnect() {
                 case <-rabbitProduct.done:
                     return
                 default:
-                    time.Sleep(time.Second * ReconnectDelay)
+                    time.Sleep(rabbitProduct.rbInfo.opts.ReconnectDelay)
                 }
             }
         }
@@ -51,7 +42,7 @@ func (rabbitProduct *RbMqClient) handleReconnect() {
         case <-rabbitProduct.done:
             return
         case <-rabbitProduct.coonNotifyClose: // 一般来说是网络断了
-            zlog.Error("网络波动，或者是断网了。。。 " + strconv.Itoa(ReconnectDelay) + "s后进行重连")
+            zlog.Errorf("网络波动，或者是断网了。。。 %0fs后进行重连", rabbitProduct.rbInfo.opts.ReconnectDelay.Seconds())
         }
     }
 }
@@ -81,37 +72,34 @@ func (rabbitProduct *RbMqClient) connect(addr string) bool {
     defer ch.Close()
     if err = ch.ExchangeDeclare(
         rabbitProduct.rbInfo.ExchangeName,
-        amqp.ExchangeDirect, // 默认路由模式
-        true,                // 持久化
-        false,               // 使用完后删除队列
-        false,
-        false,
-        nil,
-    ); err != nil {
+        rabbitProduct.rbInfo.opts.ExOpt.ExchangeType, // 默认路由模式
+        rabbitProduct.rbInfo.opts.Durable,            // 持久化
+        rabbitProduct.rbInfo.opts.ExOpt.AutoDelete,   // 使用完后删除队列
+        rabbitProduct.rbInfo.opts.ExOpt.Internal,     // 这个是有用的哈, 比如说只希望别人接收到消息, 不希望他能发送消息
+        rabbitProduct.rbInfo.opts.ExOpt.NoWait,       // 是否阻塞
+        rabbitProduct.rbInfo.opts.ExOpt.Arguments); err != nil {
         zlog.Fatalf("交换机`%v`声明失败, err = %+v\n", rabbitProduct.rbInfo.ExchangeName, xerrors.Errorf("%w", err))
     }
-    var args map[string]interface{}
     if len(rabbitProduct.rbInfo.DeadExchangeName) > 0 && len(rabbitProduct.rbInfo.DeadQueueName) > 0 {
-        args = map[string]interface{}{"x-dead-letter-exchange": rabbitProduct.rbInfo.DeadExchangeName}
         // 声明死信交换机
         if err = ch.ExchangeDeclare(
             rabbitProduct.rbInfo.DeadExchangeName,
-            amqp.ExchangeFanout, // 默认广播模式, 其实也可以用路由模式
-            true,
-            false,
-            false,
-            false,
-            nil); err != nil {
+            rabbitProduct.rbInfo.opts.DeadExOpt.ExchangeType, // 死信队列默认广播模式, 其实也可以用路由模式
+            rabbitProduct.rbInfo.opts.DeadDurable,
+            rabbitProduct.rbInfo.opts.DeadExOpt.AutoDelete,
+            rabbitProduct.rbInfo.opts.DeadExOpt.Internal,
+            rabbitProduct.rbInfo.opts.DeadExOpt.NoWait,
+            rabbitProduct.rbInfo.opts.DeadExOpt.Arguments); err != nil {
             zlog.Fatalf("死信交换机`%v`声明失败, err = %+v\n", rabbitProduct.rbInfo.DeadExchangeName, xerrors.Errorf("%w", err))
         }
         // 声明死信队列
         if _, err = ch.QueueDeclare(
             rabbitProduct.rbInfo.DeadQueueName,
-            true,
-            false,
-            false,
-            false,
-            nil); err != nil {
+            rabbitProduct.rbInfo.opts.DeadDurable,
+            rabbitProduct.rbInfo.opts.DeadQOpt.AutoDelete,
+            rabbitProduct.rbInfo.opts.DeadQOpt.Exclusive,
+            rabbitProduct.rbInfo.opts.DeadQOpt.NoWait,
+            rabbitProduct.rbInfo.opts.DeadQOpt.Arguments); err != nil {
             zlog.Fatalf("死信队列`%v`声明失败, err = %+v\n", rabbitProduct.rbInfo.DeadQueueName, xerrors.Errorf("%w", err))
         }
         // 绑定死信队列与死信交换机
@@ -119,19 +107,19 @@ func (rabbitProduct *RbMqClient) connect(addr string) bool {
             rabbitProduct.rbInfo.DeadQueueName,
             rabbitProduct.rbInfo.DeadRouteKey,
             rabbitProduct.rbInfo.DeadExchangeName,
-            false,
-            nil); err != nil {
+            rabbitProduct.rbInfo.opts.DeadQBind.NoWait,
+            rabbitProduct.rbInfo.opts.DeadQBind.Arguments); err != nil {
             zlog.Fatalf("死信队列`%v-%v-%v`绑定失败, err = %+v\n", rabbitProduct.rbInfo.DeadQueueName, rabbitProduct.rbInfo.DeadRouteKey, rabbitProduct.rbInfo.DeadExchangeName, xerrors.Errorf("%w", err))
         }
     }
     // 声明队列
     if _, err = ch.QueueDeclare(
         rabbitProduct.rbInfo.QueueName,
-        true,
-        false,
-        false,
-        false,
-        args, // 为队列绑定死信交换机
+        rabbitProduct.rbInfo.opts.Durable,
+        rabbitProduct.rbInfo.opts.QOpt.AutoDelete,
+        rabbitProduct.rbInfo.opts.QOpt.Exclusive,
+        rabbitProduct.rbInfo.opts.QOpt.NoWait,
+        rabbitProduct.rbInfo.opts.QOpt.Arguments, // 为队列绑定死信交换机
     ); err != nil {
         zlog.Fatalf("队列`%v`声明失败, err = %+v\n", rabbitProduct.rbInfo.QueueName, xerrors.Errorf("%w", err))
     }
@@ -139,8 +127,8 @@ func (rabbitProduct *RbMqClient) connect(addr string) bool {
         rabbitProduct.rbInfo.QueueName,
         rabbitProduct.rbInfo.RouteKey,
         rabbitProduct.rbInfo.ExchangeName,
-        false,
-        nil); err != nil {
+        rabbitProduct.rbInfo.opts.QBind.NoWait,
+        rabbitProduct.rbInfo.opts.QBind.Arguments); err != nil {
         zlog.Fatalf("队列`%v-%v-%v`绑定失败, err = %+v\n", rabbitProduct.rbInfo.QueueName, rabbitProduct.rbInfo.RouteKey, rabbitProduct.rbInfo.ExchangeName, xerrors.Errorf("%w", err))
     }
     // 每次连上了都要重新注册 NotifyClose 监听connection关闭通知
@@ -182,7 +170,7 @@ func (rabbitProduct *RbMqClient) Publish(msg []byte) bool {
     if err = ch.Publish(rabbitProduct.rbInfo.ExchangeName, rabbitProduct.rbInfo.RouteKey, false, false, amqp.Publishing{DeliveryMode: amqp.Persistent, Body: msg}); err != nil {
         zlog.Fatalf("发布消息失败, err = %+v\n", xerrors.Errorf("%w", err))
     }
-    ticker := time.NewTicker(time.Second * ResendDelay) // 发送超时时间，5S
+    ticker := time.NewTicker(rabbitProduct.rbInfo.opts.ResendDelay) // 发送超时时间, 3s
     defer ticker.Stop()
     select {
     case confirm := <-notifyConfirm:
@@ -220,7 +208,7 @@ func (rabbitProduct *RbMqClient) PublishMulti(msgs [][]byte) (bool, int) {
         if err := ch.Publish(rabbitProduct.rbInfo.ExchangeName, rabbitProduct.rbInfo.RouteKey, false, false, amqp.Publishing{DeliveryMode: amqp.Persistent, Body: msg}); err != nil {
             zlog.Fatalf("发布消息失败, err = %+v\n", xerrors.Errorf("%w", err))
         }
-        ticker := time.NewTicker(time.Second * ResendDelay)
+        ticker := time.NewTicker(rabbitProduct.rbInfo.opts.ResendDelay) // 发送超时时间, 3s
         select {
         case confirm := <-notifyConfirm:
             ticker.Stop()
@@ -258,7 +246,7 @@ func (rabbitProduct *RbMqClient) Consume(prefetchCount int) {
         if err != nil {
             // ch连接失败，休眠10S后重连
             zlog.Errorf("Channel连接失败, err = %+v\n", xerrors.Errorf("%w", err))
-            time.Sleep(time.Second * ReconnectDelay)
+            time.Sleep(rabbitProduct.rbInfo.opts.ReconnectDelay)
             continue
         }
         if err = ch.Qos(prefetchCount, 0, false); err != nil {
