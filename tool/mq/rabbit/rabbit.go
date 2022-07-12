@@ -38,6 +38,14 @@ type (
         Arguments amqp.Table
     }
 
+    ConsumeOpt struct {
+        NoLocal   bool
+        NoAck     bool
+        Exclusive bool
+        NoWait    bool
+        Arguments amqp.Table
+    }
+
     options struct {
         ReconnectDelay time.Duration
         ResendDelay    time.Duration
@@ -49,6 +57,7 @@ type (
         DeadExOpt      ExchangeDeclareOpt
         DeadQOpt       QueueDeclareOpt
         DeadQBind      QueueBindOpt
+        ConsumeOpt     ConsumeOpt
     }
 )
 
@@ -186,6 +195,14 @@ func WithDeadQueueBindOpt(queueBindOpt QueueBindOpt) DialOption {
     return newFuncDialOption(func(o *options) {
         dealAmqpTable(o.DeadQBind.Arguments, queueBindOpt.Arguments)
         o.DeadQBind = queueBindOpt
+    })
+}
+
+// WithConsumeOpt Consume 参数
+func WithConsumeOpt(consumeOpt ConsumeOpt) DialOption {
+    return newFuncDialOption(func(o *options) {
+        dealAmqpTable(o.ConsumeOpt.Arguments, consumeOpt.Arguments)
+        o.ConsumeOpt = consumeOpt
     })
 }
 

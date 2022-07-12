@@ -256,7 +256,7 @@ func (rabbitProduct *RbMqClient) Consume(prefetchCount int) {
         if err != nil {
             zlog.Fatalf("开启消费失败, err = %+v\n", xerrors.Errorf("%w", err))
         }
-        // 没有消息的时候就阻塞在这里。当连接断开的时候（断网），这里直接退出，然后去判断是否重新连接上了，连接上了会再次启动监听
+        // 没有消息的时候就阻塞在这里。当连接断开的时候(断网)，这里直接退出，然后去判断是否重新连接上了，连接上了会再次启动监听
         for delver := range delvers {
             rabbitProduct.callBack(delver)
         }
