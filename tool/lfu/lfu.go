@@ -1,7 +1,7 @@
 /*
 Author ：zaniu(zzaniu@126.com)
 Time   ：2022/7/11 11:47
-Desc   :
+Desc   : 最不经常使用(最少次)淘汰算法(Least Frequently Used), LFU是淘汰一段时间内使用次数最少的(使用频率低的)
 
     ......................我佛慈悲......................
 
@@ -35,7 +35,6 @@ import (
     "sync"
 )
 
-// LFU interface defines the operations that an lfu implementation should support
 type (
     Lfu interface {
         Set(k string, v interface{})
