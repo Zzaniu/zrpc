@@ -42,7 +42,7 @@ const (
                             if val == ARGV[1] or val == invalidCode then
                                 return 1
                             end
-                            local ret2 = redis.call("set", KEYS[1], invalidCode, "ex", ARGV[4])
+                            local ret2 = redis.call("set", KEYS[1], invalidCode, "px", ARGV[4])
                             if ret2 ~= false and ret2.ok == "OK" then
                                 return 1
                             end
@@ -100,7 +100,7 @@ func (r *RedisCache) store(key string, value interface{}, expiration time.Durati
         redisStoreScriptSha.Store(sha)
     }
 
-    result, err := r.client.EvalSha(sha, []string{key}, value, int64(expiration/time.Millisecond), invalidCacheCode, placeholderTime).Result()
+    result, err := r.client.EvalSha(sha, []string{key}, value, int64(expiration/time.Millisecond), invalidCacheCode, placeholderTime/time.Millisecond).Result()
     if err != nil {
         return false, xerrors.Errorf("Store SetNX error: %w", err)
     }
