@@ -100,7 +100,7 @@ func (r *RedisCache) store(key string, value interface{}, expiration time.Durati
         redisStoreScriptSha.Store(sha)
     }
 
-    result, err := r.client.EvalSha(sha, []string{key}, value, int64(expiration/time.Millisecond), invalidCacheCode, placeholderTime/time.Millisecond).Result()
+    result, err := r.client.EvalSha(sha, []string{key}, value, int64(expiration/time.Millisecond), invalidCacheCode, int64(placeholderTime/time.Millisecond)).Result()
     if err != nil {
         return false, xerrors.Errorf("Store SetNX error: %w", err)
     }
