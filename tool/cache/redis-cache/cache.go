@@ -55,7 +55,7 @@ var (
     redisStoreScriptSha atomic.Value
 )
 
-type RedisCache struct {
+type redisCache struct {
     singleFlight singleflight.Group
     client       redis.Cmdable
     random       *rand.Rand
@@ -63,23 +63,23 @@ type RedisCache struct {
 
 // NewRedisCache 实例化一个缓存结构
 func NewRedisCache(client redis.Cmdable) cache.Cache {
-    return &RedisCache{client: client, random: rand.New(rand.NewSource(time.Now().UnixNano()))}
+    return &redisCache{client: client, random: rand.New(rand.NewSource(time.Now().UnixNano()))}
 }
 
 // randomSecond100 10-100以内的随机时间秒
-func (r *RedisCache) randomSecond100() time.Duration {
+func (r *redisCache) randomSecond100() time.Duration {
     return time.Second * time.Duration(r.random100())
 }
 
 // random100 10-100以内的随机数
-func (r *RedisCache) random100() int {
+func (r *redisCache) random100() int {
     return redisExpireBase + r.random.Intn(90)
 }
 
 // store 存储 value, 使用 lua 脚本去处理, 不允许缓存不设置过期时间
 // 1. 如果 set px nx 失败, 比对一下缓存里面和当前 value 是否一致, 不一致需要 set ex 设置成无效状态
 // 2. 如果发现缓存里面的已经被设置为无效状态了或者 value 是一致的, 那么直接忽略
-func (r *RedisCache) store(key string, value interface{}, expiration time.Duration) (bool, error) {
+func (r *redisCache) store(key string, value interface{}, expiration time.Duration) (bool, error) {
     if len(key) == 0 {
         return false, nil
     }
@@ -105,7 +105,7 @@ func (r *RedisCache) store(key string, value interface{}, expiration time.Durati
 
 // Get 获取 value, 使用 lua 脚本去处理, 如果缓存不存在, 直接返回, 如果缓存是 invalidCacheCode, 执行 del key.
 // 如果在缓存中没有获取到数据, 则执行传入的函数去获取数据, 最后执行 set key value ex nx 存到缓存
-func (r *RedisCache) Get(key string, f func() (string, error), opts ...cache.Opts) (string, error) {
+func (r *redisCache) Get(key string, f func() (string, error), opts ...cache.Opts) (string, error) {
     doRet, err, _ := r.singleFlight.Do(fmt.Sprintf("Get:%s", key), func() (interface{}, error) {
 
         sha, ok := redisGetScriptSha.Load().(string)
@@ -158,7 +158,7 @@ func (r *RedisCache) Get(key string, f func() (string, error), opts ...cache.Opt
 }
 
 // MGet 批量获取
-func (r *RedisCache) MGet(keys ...string) ([]interface{}, error) {
+func (r *redisCache) MGet(keys ...string) ([]interface{}, error) {
     keysLength := len(keys)
     if keysLength > redisBulkNum {
         return nil, xerrors.Errorf("一次最多操作 %d 个", redisBulkNum)
@@ -177,7 +177,7 @@ func (r *RedisCache) MGet(keys ...string) ([]interface{}, error) {
 }
 
 // Del 软删除, 就是设置一下状态为 invalidCacheCode
-func (r *RedisCache) Del(key string) (bool, error) {
+func (r *redisCache) Del(key string) (bool, error) {
     doRet, err, _ := r.singleFlight.Do(fmt.Sprintf("Del:%s", key), func() (interface{}, error) {
         result, err := r.client.Set(key, invalidCacheCode, placeholderTime).Result()
         if err != nil {
@@ -192,7 +192,7 @@ func (r *RedisCache) Del(key string) (bool, error) {
 }
 
 // MDel 批量软删除
-func (r *RedisCache) MDel(keys ...string) ([]bool, error) {
+func (r *redisCache) MDel(keys ...string) ([]bool, error) {
     keysLength := len(keys)
     if keysLength > redisBulkNum {
         return nil, xerrors.Errorf("一次最多操作 %d 个", redisBulkNum)
