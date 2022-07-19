@@ -8,7 +8,6 @@ import (
     "golang.org/x/sync/singleflight"
     "golang.org/x/xerrors"
     "math/rand"
-    "sync"
     "sync/atomic"
     "time"
 )
@@ -50,8 +49,6 @@ const (
 )
 
 var (
-    once                sync.Once
-    redisCache          *RedisCache
     redisGetScript      = redis.NewScript(redisGetScriptStr)
     redisStoreScript    = redis.NewScript(redisStoreScriptStr)
     redisGetScriptSha   atomic.Value
@@ -66,10 +63,7 @@ type RedisCache struct {
 
 // NewRedisCache 实例化一个缓存结构
 func NewRedisCache(client redis.Cmdable) cache.Cache {
-    once.Do(func() {
-        redisCache = &RedisCache{client: client, random: rand.New(rand.NewSource(time.Now().UnixNano()))}
-    })
-    return redisCache
+    return &RedisCache{client: client, random: rand.New(rand.NewSource(time.Now().UnixNano()))}
 }
 
 // randomSecond100 10-100以内的随机时间秒
