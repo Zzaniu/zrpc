@@ -1,11 +1,7 @@
 package window
 
 import (
-    "bytes"
-    "golang.org/x/sync/singleflight"
-    "strconv"
     "sync"
-    "sync/atomic"
     "time"
 )
 
@@ -18,14 +14,6 @@ type (
         offset         int
         bucketDuration time.Duration
         lastAppendTime time.Time
-
-        summaryCache atomic.Value
-        singleFlight singleflight.Group
-    }
-
-    summary struct {
-        accept uint64
-        count  uint64
     }
 )
 
@@ -78,31 +66,12 @@ func (r *RollingPolicy) Reduce(fn func(*Bucket)) {
 }
 
 // Summary 返回有效bucket数量之和
-func (r *RollingPolicy) Summary() (uint64, uint64) {
-    span := r.timespan()
-    if span < 1 {
-        if sum, ok := r.summaryCache.Load().(*summary); ok {
-            return sum.accept, sum.count
-        }
-    }
-
-    buffer := bytes.NewBuffer(make([]byte, 0, 20))
-    buffer.WriteString("Summary-")
-    buffer.WriteString(strconv.Itoa(span))
-
-    doRet, _, _ := r.singleFlight.Do(buffer.String(), func() (interface{}, error) {
-        var accept, count uint64
-        r.Reduce(func(bucket *Bucket) {
-            accept += bucket.Sum
-            count += bucket.Count
-        })
-        sum := &summary{accept: accept, count: count}
-        r.summaryCache.Store(sum)
-        return sum, nil
+func (r *RollingPolicy) Summary() (accept uint64, count uint64) {
+    r.Reduce(func(bucket *Bucket) {
+        accept += bucket.Sum
+        count += bucket.Count
     })
-    sum := doRet.(*summary)
-
-    return sum.accept, sum.count
+    return
 }
 
 func WithBucket(bucketSize int) Option {
