@@ -52,10 +52,11 @@ type (
     }
 
     discoveryResolver struct {
-        w      register.IWatcher
-        cc     resolver.ClientConn
-        ctx    context.Context
-        cancel context.CancelFunc
+        w                register.IWatcher
+        cc               resolver.ClientConn
+        ctx              context.Context
+        cancel           context.CancelFunc
+        serverPathPrefix string
     }
 )
 
@@ -63,18 +64,19 @@ func NewResolverBuilderEtcd(discoverer register.IDiscovery) resolver.Builder {
     return &ResolverBuilderEtcd{discover: discoverer, timeout: time.Second * 5}
 }
 
-// Build 做一些解析，解析ETCD的地址，从ETCD解析到RPC的地址，用cc.UpdateState更新RPC地址, 执行 grpc.dial 的时候调用
-// 参见源码: grpc-go clientconn.go DialContext 297 ( rWrapper, err := newCCResolverWrapper(cc, resolverBuilder) )
+// Build 做一些解析，解析 ETCD 的地址，从 ETCD 解析到 gRPC 的地址，用 cc.UpdateState 更新 gRPC 地址, 执行 grpc.dial 的时候调用
+// 参见源码: grpc-go clientconn.go DialContext ( rWrapper, err := newCCResolverWrapper(cc, resolverBuilder) )
 func (b *ResolverBuilderEtcd) Build(target resolver.Target, cc resolver.ClientConn, opts resolver.BuildOptions) (resolver.Resolver, error) {
     var (
         err error
         w   register.IWatcher
     )
     done := make(chan struct{}, 1)
+    serverPathPrefix := strings.TrimPrefix(target.URL.Path, "/")
     ctx, cancel := context.WithCancel(context.Background())
     go func() {
         // 得到服务名，然后生成一个Watcher来监听服务
-        w, err = b.discover.Watch(ctx, strings.TrimPrefix(target.URL.Path, "/"))
+        w, err = b.discover.Watch(ctx, serverPathPrefix)
         close(done)
     }()
     select {
@@ -87,10 +89,11 @@ func (b *ResolverBuilderEtcd) Build(target resolver.Target, cc resolver.ClientCo
         return nil, err
     }
     r := &discoveryResolver{
-        w:      w, // Watcher
-        cc:     cc,
-        ctx:    ctx,
-        cancel: cancel,
+        w:                w, // Watcher
+        cc:               cc,
+        ctx:              ctx,
+        cancel:           cancel,
+        serverPathPrefix: serverPathPrefix,
     }
     go r.watch()
     return r, nil
@@ -144,13 +147,13 @@ func (d *discoveryResolver) update(ins []*register.ServiceInstance) {
         addrs = append(addrs, addr)
     }
     if len(addrs) == 0 {
-        zlog.Warn("[resolver] 未找到服务")
+        zlog.Warnf("[resolver] 未找到服务, server path prefix = %s\n", d.serverPathPrefix)
         return
     }
     // 更新地址信息
     err := d.cc.UpdateState(resolver.State{Addresses: addrs})
     if err != nil {
-        zlog.Errorf("[resolver] 更新服务失败, err: %s", err)
+        zlog.Errorf("[resolver] 更新服务失败, server path prefix = %s, err: %s\n", d.serverPathPrefix, err)
     }
 }
 

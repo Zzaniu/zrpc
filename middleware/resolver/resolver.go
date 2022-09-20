@@ -44,8 +44,11 @@ import (
     "time"
 )
 
+// Deprecated
 type etcdResolverBuilder struct{}
 
+// Resolver 解析器
+// Deprecated
 type Resolver struct {
     client    *etcdClientV3.Client
     key       string
