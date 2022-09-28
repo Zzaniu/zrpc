@@ -46,7 +46,7 @@ func UnaryRecoverInterceptor(ctx context.Context, req interface{}, info *grpc.Un
     defer func() {
         if r := recover(); r != nil {
             debugInfo := debug.Stack()
-            zlog.Errorf("err: \n%v", *(*string)(unsafe.Pointer(&debugInfo)))
+            zlog.Errorf("err: %v\n%v", r, *(*string)(unsafe.Pointer(&debugInfo)))
             err = status.Errorf(codes.Internal, "panic: %v", r)
         }
     }()
