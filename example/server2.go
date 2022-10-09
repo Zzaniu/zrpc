@@ -76,7 +76,7 @@ func main() {
     })
 
     go func() {
-        fmt.Println("服务启动")
+        fmt.Println("服务启动, listen in ", service.ServerEndpoint())
         err := service.Serve()
         if err != nil {
             panic(err)

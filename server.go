@@ -40,6 +40,7 @@ import (
     "github.com/Zzaniu/zrpc/middleware/tracer"
     "google.golang.org/grpc"
     "net"
+    "strings"
     "time"
 )
 
@@ -55,6 +56,7 @@ type (
     serverOption struct {
         opts              []grpc.ServerOption
         serverInterceptor []grpc.UnaryServerInterceptor
+        serveEndpoint     string
     }
 
     RegisterServer func(server *grpc.Server)
@@ -72,6 +74,7 @@ func MustNewServer(ctx context.Context, server rpc.Server, registerServer Regist
                 breaker.WithServerBreakerInterceptor(), // sre 弹性熔断拦截器
                 recovery.UnaryRecoverInterceptor,       // recover 拦截器
             },
+            serveEndpoint: server.GetEndpoint(),
         },
         ServiceInstance: register.NewServiceInstance(
             time.Now().Unix(),
@@ -98,7 +101,7 @@ func MustNewServer(ctx context.Context, server rpc.Server, registerServer Regist
 // Serve 启动服务
 func (s *Server) Serve() error {
     // 运行服务
-    listen, err := net.Listen("tcp", s.ServiceInstance.Endpoint)
+    listen, err := net.Listen("tcp", s.option.serveEndpoint)
     if err != nil {
         return err
     }
@@ -126,6 +129,11 @@ func (s *Server) StopServe() {
     }
 }
 
+// ServerEndpoint 服务真正运行的 endpoint
+func (s *Server) ServerEndpoint() string {
+    return s.option.serveEndpoint
+}
+
 // WithServerOption 通过 grpc.ServerOption 生成 SOption
 func WithServerOption(opts ...grpc.ServerOption) SOption {
     return func(option *serverOption) {
@@ -137,6 +145,13 @@ func WithServerOption(opts ...grpc.ServerOption) SOption {
 func WithServerInterceptor(serverInterceptor ...grpc.UnaryServerInterceptor) SOption {
     return func(option *serverOption) {
         option.serverInterceptor = append(option.serverInterceptor, serverInterceptor...)
+    }
+}
+
+// WithServeZero 设置服务启动运行在 0.0.0.0
+func WithServeZero() SOption {
+    return func(option *serverOption) {
+        option.serveEndpoint = "0.0.0.0:" + strings.Split(option.serveEndpoint, ":")[1]
     }
 }
 

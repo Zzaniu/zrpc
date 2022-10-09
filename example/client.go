@@ -70,9 +70,9 @@ func main() {
     // 获取往 etcd 中注册的 uri
     fmt.Println("userClient.GetTarget() = ", userClient.GetTarget())
     // 这里是为了兼容之前的
-    // addClientConn := zrpc.MustNewClientConn(cfg, cfg.AddServerName)
+    addClientConn := zrpc.MustNewClientConn(cfg, cfg.AddServerName)
     UserRpc := proto2.NewGreeterClient(userClient.Coon())
-    // AddRpc := proto2.NewAddServerClient(addClientConn)
+    AddRpc := proto2.NewAddServerClient(addClientConn)
 
     for {
         go func() {
@@ -99,25 +99,25 @@ func main() {
             }
         }()
 
-        // go func() {
-        // 	res2, err := AddRpc.AddInt(context.Background(), &proto2.AddIntRequest{Value2: 2, Value1: 1})
-        //
-        // 	if err != nil {
-        // 		s, ok := status.FromError(err)
-        // 		if ok {
-        // 			if s.Code() == codes.DeadlineExceeded {
-        // 				fmt.Println("超时了, err = ", s.Message())
-        // 			} else if s.Code() == codes.Internal {
-        // 				fmt.Println("s.Message() = ", s.Message())
-        // 			}
-        // 		} else {
-        // 			panic(err)
-        // 		}
-        // 	} else {
-        // 		fmt.Println("res2.Message = ", res2.Message)
-        // 	}
-        // }()
-        // time.Sleep(time.Millisecond * 5000)
+        go func() {
+            res2, err := AddRpc.AddInt(context.Background(), &proto2.AddIntRequest{Value2: 2, Value1: 1})
+
+            if err != nil {
+                s, ok := status.FromError(err)
+                if ok {
+                    if s.Code() == codes.DeadlineExceeded {
+                        fmt.Println("超时了, err = ", s.Message())
+                    } else if s.Code() == codes.Internal {
+                        fmt.Println("s.Message() = ", s.Message())
+                    }
+                } else {
+                    panic(err)
+                }
+            } else {
+                fmt.Println("res2.Message = ", res2.Message)
+            }
+        }()
+        time.Sleep(time.Millisecond * 5000)
         break
     }
     time.Sleep(time.Second * 500)
