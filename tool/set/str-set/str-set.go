@@ -28,6 +28,10 @@ func (s *strSet) Add(key string) bool {
     return true
 }
 
+func (s *strSet) add(key string) {
+    (*s)[key] = struct{}{}
+}
+
 // Remove 删除元素
 func (s *strSet) Remove(key string) {
     // 如果key不存在，为空操作
@@ -96,11 +100,11 @@ func (s *strSet) Same(other set.Set) bool {
 func (s *strSet) Union(other set.Set) set.Set {
     union := NewStrSet()
     for v := range *s {
-        union.Add(v)
+        union.add(v)
     }
     elements := other.Elements()
     for index := range elements {
-        union.Add(elements[index])
+        union.add(elements[index])
     }
     return union
 }
@@ -109,11 +113,13 @@ func (s *strSet) Union(other set.Set) set.Set {
 func (s *strSet) Difference(other set.Set) set.Set {
     diffSet := NewStrSet()
     if other == nil || other.Len() == 0 {
-        diffSet.Union(s)
+        for v := range *s {
+            diffSet.add(v)
+        }
     } else {
         for v := range *s {
             if !other.Contains(v) {
-                diffSet.Add(v)
+                diffSet.add(v)
             }
         }
     }
@@ -129,7 +135,7 @@ func (s *strSet) Intersect(other set.Set) set.Set {
     elements := other.Elements()
     for index := range elements {
         if s.Contains(elements[index]) {
-            intersectSet.Add(elements[index])
+            intersectSet.add(elements[index])
         }
     }
     return intersectSet
@@ -139,7 +145,7 @@ func (s *strSet) Intersect(other set.Set) set.Set {
 func NewFromStrSlice(strSlice []string) *strSet {
     ret := make(strSet)
     for index := range strSlice {
-        ret.Add(strSlice[index])
+        ret.add(strSlice[index])
     }
     return &ret
 }
