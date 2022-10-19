@@ -33,11 +33,13 @@ package zlog
 import (
     "errors"
     "fmt"
+    "github.com/Zzaniu/zrpc/utils"
     "io/fs"
     "io/ioutil"
     "log"
     "os"
     "path"
+    "path/filepath"
     "sort"
     "time"
 )
@@ -127,6 +129,10 @@ func createLogFile(logFilePath string, format Format) (writerFile *os.File, err 
     switch format {
     case Date:
         formatStr = "2006-01-02"
+    }
+    err = utils.MkdirAll(filepath.Dir(logFilePath), 0644)
+    if err != nil {
+        return
     }
     for i := 0; i < 3; i++ {
         writerFile, err = os.OpenFile(fmt.Sprintf("%v.%v.log", logFilePath, time.Now().Format(formatStr)), FileStandard, 0755)
