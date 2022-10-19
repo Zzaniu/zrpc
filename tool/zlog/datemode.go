@@ -44,6 +44,7 @@ type (
         prevCutTime    time.Time
         cutIntervalDay int
         keepCnt        int // 保留日志个数
+        fileNameFormat Format
     }
 
     DateOption func(*DateFileManage)
@@ -54,6 +55,7 @@ func NewDateCutMode(filePath string, options ...FileManageOptions) *DateFileMana
     opt := FileManageOption{
         cutIntervalDay: 1,
         keepCnt:        10,
+        fileNameFormat: Date,
     }
 
     for _, o := range options {
@@ -65,6 +67,7 @@ func NewDateCutMode(filePath string, options ...FileManageOptions) *DateFileMana
         cutIntervalDay: opt.cutIntervalDay,
         filePath:       filePath,
         keepCnt:        opt.keepCnt,
+        fileNameFormat: opt.fileNameFormat,
     }
 
     return dateFileManage
@@ -78,7 +81,7 @@ func (d *DateFileManage) GetFile() *os.File {
     d.Lock()
     defer d.Unlock()
     if d.logWriteFile == nil {
-        d.logWriteFile = mustCreateLogFile(d.filePath)
+        d.logWriteFile = mustCreateLogFile(d.filePath, d.fileNameFormat)
     }
     return d.logWriteFile
 }
@@ -105,7 +108,7 @@ func (d *DateFileManage) IsCut(f SetOutput) error {
             // _ = d.Close()
             // _ = Rename(d.filePath)
 
-            writer, err := createLogFile(d.filePath)
+            writer, err := createLogFile(d.filePath, d.fileNameFormat)
             if err != nil {
                 return err
             }

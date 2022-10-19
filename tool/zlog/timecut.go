@@ -39,11 +39,12 @@ import (
 type (
     TimeFileManage struct {
         sync.Mutex
-        filePath     string
-        logWriteFile *os.File
-        prevCutTime  time.Time
-        cutInterval  time.Duration
-        keepCnt      int // 保留日志个数
+        filePath       string
+        logWriteFile   *os.File
+        prevCutTime    time.Time
+        cutInterval    time.Duration
+        keepCnt        int // 保留日志个数
+        fileNameFormat Format
     }
 
     TimeOption func(*TimeFileManage)
@@ -59,8 +60,9 @@ const (
 // NewTimeFileManage 创建文件大小管理器, 默认20M切割
 func NewTimeFileManage(filePath string, options ...FileManageOptions) *TimeFileManage {
     opt := FileManageOption{
-        cutInterval: Hour12,
-        keepCnt:     10,
+        cutInterval:    Hour12,
+        keepCnt:        10,
+        fileNameFormat: Timestamp,
     }
 
     for _, o := range options {
@@ -68,10 +70,11 @@ func NewTimeFileManage(filePath string, options ...FileManageOptions) *TimeFileM
     }
 
     timeFileManage := &TimeFileManage{
-        filePath:    filePath,
-        prevCutTime: time.Now(),
-        cutInterval: opt.cutInterval,
-        keepCnt:     opt.keepCnt,
+        filePath:       filePath,
+        prevCutTime:    time.Now(),
+        cutInterval:    opt.cutInterval,
+        keepCnt:        opt.keepCnt,
+        fileNameFormat: opt.fileNameFormat,
     }
 
     return timeFileManage
@@ -85,7 +88,7 @@ func (t *TimeFileManage) GetFile() *os.File {
     t.Lock()
     defer t.Unlock()
     if t.logWriteFile == nil {
-        t.logWriteFile = mustCreateLogFile(t.filePath)
+        t.logWriteFile = mustCreateLogFile(t.filePath, t.fileNameFormat)
     }
     return t.logWriteFile
 }
@@ -110,7 +113,7 @@ func (t *TimeFileManage) IsCut(f SetOutput) error {
             // _ = t.Close()
             // _ = Rename(t.filePath)
 
-            writer, err := createLogFile(t.filePath)
+            writer, err := createLogFile(t.filePath, t.fileNameFormat)
             if err != nil {
                 return err
             }

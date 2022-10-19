@@ -40,11 +40,12 @@ import (
 type (
     SizeFileManage struct {
         sync.Mutex
-        filePath     string
-        logWriteFile *os.File
-        cutSize      int64
-        prevCutTime  time.Time
-        keepCnt      int // 保留日志个数
+        filePath       string
+        logWriteFile   *os.File
+        cutSize        int64
+        prevCutTime    time.Time
+        keepCnt        int    // 保留日志个数
+        fileNameFormat Format // 保留日志个数
     }
 
     SizeOption func(*SizeFileManage)
@@ -60,8 +61,9 @@ const (
 // NewSizeCutMode 创建文件大小管理器, 默认20M切割
 func NewSizeCutMode(filePath string, options ...FileManageOptions) *SizeFileManage {
     opt := FileManageOption{
-        cutSize: M50,
-        keepCnt: 10,
+        cutSize:        M50,
+        keepCnt:        10,
+        fileNameFormat: Timestamp,
     }
 
     for _, o := range options {
@@ -69,10 +71,11 @@ func NewSizeCutMode(filePath string, options ...FileManageOptions) *SizeFileMana
     }
 
     sizeFileManage := &SizeFileManage{
-        cutSize:     opt.cutSize,
-        filePath:    filePath,
-        prevCutTime: time.Now(),
-        keepCnt:     opt.keepCnt,
+        cutSize:        opt.cutSize,
+        filePath:       filePath,
+        prevCutTime:    time.Now(),
+        keepCnt:        opt.keepCnt,
+        fileNameFormat: opt.fileNameFormat,
     }
 
     return sizeFileManage
@@ -86,7 +89,7 @@ func (s *SizeFileManage) GetFile() *os.File {
     s.Lock()
     defer s.Unlock()
     if s.logWriteFile == nil {
-        s.logWriteFile = mustCreateLogFile(s.filePath)
+        s.logWriteFile = mustCreateLogFile(s.filePath, s.fileNameFormat)
     }
     return s.logWriteFile
 }
@@ -118,7 +121,7 @@ func (s *SizeFileManage) IsCut(f SetOutput) error {
             // _ = s.Close()
             // _ = Rename(s.filePath)
 
-            writer, err := createLogFile(s.filePath)
+            writer, err := createLogFile(s.filePath, s.fileNameFormat)
             if err != nil {
                 if writer != nil {
                     _ = writer.Close()

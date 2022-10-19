@@ -43,15 +43,23 @@ import (
 )
 
 type (
+    Format int
+
     fileInfo []fs.FileInfo
 
     FileManageOption struct {
-        keepCnt        int
-        cutIntervalDay int
-        cutSize        int64
-        cutInterval    time.Duration
+        keepCnt        int           // 保持数量
+        cutIntervalDay int           // 切割间隔天数
+        cutSize        int64         // 切割大小
+        cutInterval    time.Duration // 切割间隔
+        fileNameFormat Format
     }
     FileManageOptions func(*FileManageOption)
+)
+
+const (
+    Timestamp Format = iota + 1
+    Date
 )
 
 func (f fileInfo) Len() int { return len(f) }
@@ -111,12 +119,17 @@ func WithCutIntervalTime(cutInterval time.Duration) FileManageOptions {
     }
 }
 
-func createLogFile(logFilePath string) (writerFile *os.File, err error) {
+func createLogFile(logFilePath string, format Format) (writerFile *os.File, err error) {
     if len(logFilePath) == 0 {
         return nil, errors.New(fmt.Sprintf("无文件名, logFilePath = %v", logFilePath))
     }
+    formatStr := "20060102150405"
+    switch format {
+    case Date:
+        formatStr = "2006-01-02"
+    }
     for i := 0; i < 3; i++ {
-        writerFile, err = os.OpenFile(fmt.Sprintf("%v.%v.log", logFilePath, time.Now().Format("20060102150405")), FileStandard, 0755)
+        writerFile, err = os.OpenFile(fmt.Sprintf("%v.%v.log", logFilePath, time.Now().Format(formatStr)), FileStandard, 0755)
         if err != nil {
             log.Printf("创建文件失败, err = %v\n", err)
             time.Sleep(time.Millisecond * 1)
@@ -127,8 +140,8 @@ func createLogFile(logFilePath string) (writerFile *os.File, err error) {
     return
 }
 
-func mustCreateLogFile(logFilePath string) *os.File {
-    writerFile, err := createLogFile(logFilePath)
+func mustCreateLogFile(logFilePath string, format Format) *os.File {
+    writerFile, err := createLogFile(logFilePath, format)
     if err != nil {
         log.Fatalf("create file %v failed: %v", logFilePath, err)
     }
