@@ -81,7 +81,7 @@ func (r *lru) Get(i interface{}, fn NewLruElement) *Element {
     }
 
     ele := fn(i)
-    element = r.push(fn(i))
+    element = r.push(ele)
     r.m.Set(i, element)
     t := r.clean()
     if t != nil {
