@@ -75,7 +75,7 @@ const (
     WARN
     ERROR
     FATAL
-    ALLLogLevel = DEBUG | INFO | WARN | ERROR
+    ALLLogLevel = DEBUG | INFO | WARN | ERROR | FATAL
 )
 
 const (
