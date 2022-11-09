@@ -122,6 +122,7 @@ func (t *TimeFileManage) IsCut(f SetOutput) error {
             t.logWriteFile = writer
             t.prevCutTime = now
             f(writer)
+            CleanHisLog(t.filePath, t.keepCnt)
         }
     }
     return nil

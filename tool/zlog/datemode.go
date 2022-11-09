@@ -117,6 +117,7 @@ func (d *DateFileManage) IsCut(f SetOutput) error {
             d.logWriteFile = writer
             d.prevCutTime = now
             f(writer)
+            CleanHisLog(d.filePath, d.keepCnt)
         }
     }
     return nil
