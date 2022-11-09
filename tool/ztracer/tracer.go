@@ -108,23 +108,28 @@ func Extract(ctx context.Context, p propagation.TextMapPropagator, metadata *met
 // 设置一个全局的 Jaeger Tracer
 func SetJaegerTracerProvider(tra Trace) error {
     // 创建 Jaeger 接收者
-    exp, err := jaeger.New(jaeger.WithCollectorEndpoint(jaeger.WithEndpoint(tra.Endpoint)))
-    if err != nil {
-        return err
-    }
-    tp := tracesdk.NewTracerProvider(
-        // 设置为1, 表示所有的都上报
-        tracesdk.WithSampler(tracesdk.ParentBased(tracesdk.TraceIDRatioBased(1.0))), // 设置为0则不上报
-        // 分批上报
-        tracesdk.WithBatcher(exp),
+    var (
+        exp  *jaeger.Exporter
+        err  error
+        opts []tracesdk.TracerProviderOption
+    )
+    opts = []tracesdk.TracerProviderOption{
         // 设置一些记录信息
         tracesdk.WithResource(resource.NewSchemaless(
             // 设置名字
             semconv.ServiceNameKey.String(tra.Name),
             // 设置环境名
             attribute.String("env", tra.Model),
-        )),
-    )
+        ))}
+    if len(tra.Endpoint) > 0 {
+        exp, err = jaeger.New(jaeger.WithCollectorEndpoint(jaeger.WithEndpoint(tra.Endpoint)))
+        if err != nil {
+            return err
+        }
+        // ParentBased: 设置为1, 表示所有的都上报, 设置为0则不上报, WithBatcher: 分批上报
+        opts = append(opts, tracesdk.WithSampler(tracesdk.ParentBased(tracesdk.TraceIDRatioBased(1.0))), tracesdk.WithBatcher(exp))
+    }
+    tp := tracesdk.NewTracerProvider(opts...)
     // 设置全局 tracer
     otel.SetTracerProvider(tp)
     otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
