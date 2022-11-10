@@ -44,6 +44,7 @@ import (
     "go.opentelemetry.io/otel/trace"
     "google.golang.org/grpc/metadata"
     "google.golang.org/grpc/peer"
+    "io"
 )
 
 // assert that metadataSupplier implements the TextMapCarrier interface
@@ -136,6 +137,42 @@ func SetJaegerTracerProvider(tra Trace) error {
     // 设置全局 tracer
     otel.SetTracerProvider(tp)
     otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
+    return nil
+}
+
+func SetNoopTracerProvider() {
+    tp := tracesdk.NewTracerProvider(tracesdk.WithSampler(tracesdk.NeverSample()), tracesdk.WithBatcher(tracetest.NewNoopExporter()))
+    // 设置全局 tracer
+    otel.SetTracerProvider(tp)
+    otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
+}
+
+// SetOutTracerProvider 上报到 io.Writer
+// Deprecated
+func SetOutTracerProvider(w io.Writer) error {
+    // TODO 还可以搞一个输出到文件的, 但是感觉意义不太大
+    //  import "go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
+    // var (
+    //     opts []tracesdk.TracerProviderOption
+    // )
+    // exp, err := stdouttrace.New(stdouttrace.WithPrettyPrint(), stdouttrace.WithWriter(w))
+    // if err != nil {
+    //     return err
+    // }
+    // opts = []tracesdk.TracerProviderOption{
+    //     // 设置一些记录信息
+    //     tracesdk.WithResource(resource.NewSchemaless(
+    //         // 设置名字
+    //         semconv.ServiceNameKey.String(tra.Name),
+    //         // 设置环境名
+    //         attribute.String("env", tra.Model),
+    //     ))}
+    //
+    // opts = append(opts, tracesdk.WithSampler(tracesdk.ParentBased(tracesdk.TraceIDRatioBased(1))), tracesdk.WithBatcher(exp))
+    // tp := tracesdk.NewTracerProvider(opts...)
+    // // 设置全局 tracer
+    // otel.SetTracerProvider(tp)
+    // otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
     return nil
 }
 

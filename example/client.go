@@ -59,10 +59,11 @@ func main() {
     flag.Parse()
     cfg := ClientConf{}
     configure.MustLoadCfg(*clientConfigFile, &cfg)
-    err := ztracer.SetJaegerTracerProvider(cfg.Trace)
-    if err != nil {
-        panic(err)
-    }
+    // err := ztracer.SetJaegerTracerProvider(cfg.Trace)
+    // if err != nil {
+    //     panic(err)
+    // }
+    ztracer.SetNoopTracerProvider()
 
     // target := "discovery://172.18.2.249:20000,172.18.2.249:20002,172.18.2.249:20004/Dev/user.rpc"
     userClient := zrpc.MustNewClient(cfg, cfg.UserServerName)

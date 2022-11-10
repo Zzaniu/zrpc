@@ -69,11 +69,11 @@ func main() {
 
     configure.MustLoadCfg(*serverConfigFile, &cfg)
 
-    err := ztracer.SetJaegerTracerProvider(cfg.Trace)
-    if err != nil {
-        panic(err)
-    }
-
+    // err := ztracer.SetJaegerTracerProvider(cfg.Trace)
+    // if err != nil {
+    //     panic(err)
+    // }
+    ztracer.SetNoopTracerProvider()
     // test start
 
     conf := &rpc.ClientConf{

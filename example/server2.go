@@ -65,10 +65,11 @@ func main() {
 
     configure.MustLoadCfg(*addServerConfigFile, &cfg)
 
-    err := ztracer.SetJaegerTracerProvider(cfg.Trace)
-    if err != nil {
-        panic(err)
-    }
+    // err := ztracer.SetJaegerTracerProvider(cfg.Trace)
+    // if err != nil {
+    //     panic(err)
+    // }
+    ztracer.SetNoopTracerProvider()
 
     service := zrpc.MustNewServer(context.Background(), cfg, func(srv *grpc.Server) {
         addServer := &AddServer{}
