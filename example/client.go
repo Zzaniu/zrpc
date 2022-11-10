@@ -59,7 +59,6 @@ func main() {
     flag.Parse()
     cfg := ClientConf{}
     configure.MustLoadCfg(*clientConfigFile, &cfg)
-
     err := ztracer.SetJaegerTracerProvider(cfg.Trace)
     if err != nil {
         panic(err)

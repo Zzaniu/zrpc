@@ -59,9 +59,10 @@ func ClientTraceInterceptor(ctx context.Context, method string, req, reply inter
         trace.WithAttributes(attr...))
     defer span.End()
 
-    // 注入 md   这个必须有啊，不然链路就断开了
+    // Inject: 注入一个SpanContext到一个载体, Extract: 提取一个SpanContext从载体
+    // 将元数据 trace parent 注入 md
     ztracer.Inject(ctx, otel.GetTextMapPropagator(), &md)
-    // 注入 ctx
+    // 然后再注入到 ctx, 链路就成了
     ctx = metadata.NewOutgoingContext(ctx, md)
 
     ztracer.MessageSent.Event(ctx, 1, req)

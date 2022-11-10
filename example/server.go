@@ -38,6 +38,7 @@ import (
     "github.com/Zzaniu/zrpc/configure"
     "github.com/Zzaniu/zrpc/configure/rpc"
     proto2 "github.com/Zzaniu/zrpc/example/proto"
+    "github.com/Zzaniu/zrpc/tool/zlog"
     "github.com/Zzaniu/zrpc/tool/ztracer"
     "google.golang.org/grpc"
     "google.golang.org/grpc/codes"
@@ -109,6 +110,7 @@ func main() {
 }
 
 func (g *GreeterServer) SayHello(ctx context.Context, req *proto2.HelloRequest) (*proto2.HelloReply, error) {
+    zlog.WithContext(ctx)
     fmt.Println("server 2")
     time.Sleep(time.Millisecond * 30)
     deadline, ok := ctx.Deadline()

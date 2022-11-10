@@ -39,6 +39,7 @@ import (
     "go.opentelemetry.io/otel/propagation"
     "go.opentelemetry.io/otel/sdk/resource"
     tracesdk "go.opentelemetry.io/otel/sdk/trace"
+    "go.opentelemetry.io/otel/sdk/trace/tracetest"
     semconv "go.opentelemetry.io/otel/semconv/v1.7.0"
     "go.opentelemetry.io/otel/trace"
     "google.golang.org/grpc/metadata"
@@ -127,7 +128,9 @@ func SetJaegerTracerProvider(tra Trace) error {
             return err
         }
         // ParentBased: 设置为1, 表示所有的都上报, 设置为0则不上报, WithBatcher: 分批上报
-        opts = append(opts, tracesdk.WithSampler(tracesdk.ParentBased(tracesdk.TraceIDRatioBased(1.0))), tracesdk.WithBatcher(exp))
+        opts = append(opts, tracesdk.WithSampler(tracesdk.ParentBased(tracesdk.TraceIDRatioBased(1))), tracesdk.WithBatcher(exp))
+    } else {
+        opts = append(opts, tracesdk.WithSampler(tracesdk.NeverSample()), tracesdk.WithBatcher(tracetest.NewNoopExporter()))
     }
     tp := tracesdk.NewTracerProvider(opts...)
     // 设置全局 tracer
