@@ -38,6 +38,7 @@ import (
     "github.com/Zzaniu/zrpc/configure"
     "github.com/Zzaniu/zrpc/configure/rpc"
     proto2 "github.com/Zzaniu/zrpc/example/proto"
+    "github.com/Zzaniu/zrpc/tool/zlog"
     "github.com/Zzaniu/zrpc/tool/ztracer"
     "google.golang.org/grpc"
     "os"
@@ -92,7 +93,7 @@ func main() {
 }
 
 func (a *AddServer) AddInt(ctx context.Context, req *proto2.AddIntRequest) (*proto2.AddIntReply, error) {
-    fmt.Println("server 2")
+    zlog.WithTrace(ctx).Info("server 2")
     deadline, ok := ctx.Deadline()
     fmt.Println("deadline = ", deadline, ", ok = ", ok)
     time.Sleep(time.Millisecond * 50)

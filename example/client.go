@@ -100,6 +100,7 @@ func main() {
         }()
 
         go func() {
+            return
             res2, err := AddRpc.AddInt(context.Background(), &proto2.AddIntRequest{Value2: 2, Value1: 1})
 
             if err != nil {

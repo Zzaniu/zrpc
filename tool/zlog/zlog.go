@@ -1,7 +1,7 @@
 /*
 Author ：zaniu(zzaniu@126.com)
 Time   ：2022/3/12 14:26
-Desc   : 后续不再维护, 建议是直接使用 zap/logrus 即可
+Desc   : 实现的很丑, 后续不再维护, 建议是直接使用 zap/logrus 即可
 
     ......................我佛慈悲......................
 
@@ -55,11 +55,32 @@ type (
         Close() error          // 关闭文件
     }
 
+    Logger interface {
+        Debug(args ...interface{})
+        Info(args ...interface{})
+        Warn(args ...interface{})
+        Error(args ...interface{})
+        Fatal(args ...interface{})
+        Debugf(format string, args ...interface{})
+        Infof(format string, args ...interface{})
+        Warnf(format string, args ...interface{})
+        Errorf(format string, args ...interface{})
+        Fatalf(format string, args ...interface{})
+    }
+
+    noCopy struct{}
+
     zlog struct {
-        sync.Mutex
+        noCopy
+
         logger        *log.Logger
         logLevel      LogLevel
         logFileManage LogFileManage
+    }
+
+    traceLog struct {
+        ctx     context.Context
+        traceId string
     }
 
     Option struct {
@@ -88,19 +109,17 @@ const (
     FmtStandard  = log.Llongfile | log.Ldate | log.Lmicroseconds
     FileStandard = os.O_WRONLY | os.O_CREATE | os.O_APPEND
     prefixName   = "[zlog] "
+    callDepth    = 4
 )
 
 var (
-    zlogx       = &zlog{logger: log.New(io.Writer(os.Stdout), prefixName, FmtStandard), logLevel: ALLLogLevel}
-    once        sync.Once
-    LogLevelMap = map[LogLevel]string{
-        DEBUG: "DEBUG",
-        INFO:  "INFO",
-        WARN:  "WARN",
-        ERROR: "ERROR",
-        FATAL: "FATAL",
-    }
+    zlogx = &zlog{logger: log.New(io.Writer(os.Stdout), prefixName, FmtStandard), logLevel: ALLLogLevel}
+    once  sync.Once
 )
+
+func (n *noCopy) Lock() {}
+
+func (n *noCopy) Unlock() {}
 
 func newZlog(logFilePath string, logLevel LogLevel, options []LogFileManageOption, writers ...io.Writer) *zlog {
     option := Option{logFileManage: NewDateCutMode(logFilePath)}
@@ -221,7 +240,7 @@ func (z *zlog) cut() {
 
 func (z *zlog) write(loglevel LogLevel, args ...interface{}) {
     z.cut()
-    err := z.logger.Output(4, fmt.Sprintln(setPrefix(loglevel, args)...))
+    err := z.logger.Output(callDepth, fmt.Sprintln(setPrefix(loglevel, args)...))
     if err != nil {
         log.Printf("日志写入错误, err = %v\n", err)
     }
@@ -229,32 +248,41 @@ func (z *zlog) write(loglevel LogLevel, args ...interface{}) {
 
 func (z *zlog) writef(loglevel LogLevel, format string, args ...interface{}) {
     z.cut()
-    err := z.logger.Output(4, fmt.Sprintf(setPrefixf(loglevel, format), args...))
+    err := z.logger.Output(callDepth, fmt.Sprintf(setPrefixf(loglevel, format), args...))
     if err != nil {
         log.Printf("日志写入错误, err = %v\n", err)
     }
 }
 
 func setPrefix(level LogLevel, args []interface{}) []interface{} {
-    levelStr := LogLevelMap[level]
-    b := bytes.Buffer{}
-    b.WriteString("[")
-    b.WriteString(levelStr)
-    b.WriteString("]")
+    levelStr := getLogLevelString(level)
     t := make([]interface{}, 0, len(args)+1)
-    t = append(t, b.String())
+    t = append(t, "["+levelStr+"]")
     t = append(t, args...)
     return t
 }
 
 func setPrefixf(level LogLevel, format string) string {
-    levelStr := LogLevelMap[level]
+    levelStr := getLogLevelString(level)
     b := bytes.Buffer{}
     b.WriteString("[")
     b.WriteString(levelStr)
     b.WriteString("] ")
     b.WriteString(format)
     return b.String()
+}
+
+func getLogLevelString(level LogLevel) string {
+    if level == DEBUG {
+        return "DEBUG"
+    } else if level == INFO {
+        return "INFO"
+    } else if level == WARN {
+        return "WARN"
+    } else if level == ERROR {
+        return "ERROR"
+    }
+    return "FATAL"
 }
 
 func Close() error {
@@ -302,6 +330,65 @@ func Error(args ...interface{}) {
 
 func Fatal(args ...interface{}) {
     zlogx.Fatal(args...)
+}
+
+func WithTrace(ctx context.Context) Logger {
+    spanContext := trace.SpanContextFromContext(ctx)
+    if spanContext.HasTraceID() {
+        return &traceLog{ctx: ctx, traceId: spanContext.TraceID().String()}
+    }
+    return zlogx
+}
+
+func (t *traceLog) Debug(args ...interface{}) {
+    zlogx.Debug(t.addTraceId(args)...)
+}
+
+func (t *traceLog) Info(args ...interface{}) {
+    zlogx.Info(t.addTraceId(args)...)
+}
+
+func (t *traceLog) Warn(args ...interface{}) {
+    zlogx.Warn(t.addTraceId(args)...)
+}
+
+func (t *traceLog) Error(args ...interface{}) {
+    zlogx.Error(t.addTraceId(args)...)
+}
+
+func (t *traceLog) Fatal(args ...interface{}) {
+    zlogx.Fatal(t.addTraceId(args)...)
+}
+
+func (t *traceLog) Debugf(format string, args ...interface{}) {
+    zlogx.Debugf(t.addTraceIdf(format), args...)
+}
+
+func (t *traceLog) Infof(format string, args ...interface{}) {
+    zlogx.Infof(t.addTraceIdf(format), args...)
+}
+
+func (t *traceLog) Warnf(format string, args ...interface{}) {
+    zlogx.Warnf(t.addTraceIdf(format), args...)
+}
+
+func (t *traceLog) Errorf(format string, args ...interface{}) {
+    zlogx.Errorf(t.addTraceIdf(format), args...)
+}
+
+func (t *traceLog) Fatalf(format string, args ...interface{}) {
+    zlogx.Fatalf(t.addTraceIdf(format), args...)
+}
+
+func (t *traceLog) addTraceId(args []interface{}) []interface{} {
+    tmp := make([]interface{}, 0, len(args)+1)
+    tmp = append(tmp, fmt.Sprintf("traceid: %s,", t.traceId))
+    tmp = append(tmp, args...)
+    return tmp
+}
+
+func (t *traceLog) addTraceIdf(format string) string {
+    return fmt.Sprintf("traceid: %v, ", t.traceId) + format
 }
 
 func WithContext(ctx context.Context) (spanId, traceId string) {

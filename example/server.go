@@ -112,6 +112,8 @@ func main() {
 func (g *GreeterServer) SayHello(ctx context.Context, req *proto2.HelloRequest) (*proto2.HelloReply, error) {
     zlog.WithContext(ctx)
     fmt.Println("server 2")
+    zlog.WithTrace(ctx).Infof("into server, method = SayHello")
+    zlog.WithTrace(ctx).Info("into server2, method = SayHello")
     time.Sleep(time.Millisecond * 30)
     deadline, ok := ctx.Deadline()
     fmt.Println("deadline = ", deadline, ", ok = ", ok)
