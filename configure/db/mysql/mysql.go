@@ -32,7 +32,7 @@ package mysql
 
 import (
     "fmt"
-    "github.com/Zzaniu/zrpc/tool/zlog"
+    "github.com/Zzaniu/tool/zlog"
     "gorm.io/driver/mysql"
     "gorm.io/gorm"
     "gorm.io/gorm/logger"

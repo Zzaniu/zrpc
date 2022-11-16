@@ -32,7 +32,7 @@ package tracer
 
 import (
     "context"
-    "github.com/Zzaniu/zrpc/tool/ztracer"
+    "github.com/Zzaniu/tool/ztracer"
     "go.opentelemetry.io/otel"
     "go.opentelemetry.io/otel/baggage"
     "go.opentelemetry.io/otel/codes"

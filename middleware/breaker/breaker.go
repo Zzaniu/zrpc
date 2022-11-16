@@ -32,9 +32,9 @@ package breaker
 
 import (
     "context"
-    "github.com/Zzaniu/zrpc/tool/sre"
-    "github.com/Zzaniu/zrpc/tool/zlog"
-    "github.com/Zzaniu/zrpc/utils/errcode"
+    "github.com/Zzaniu/tool/errcode"
+    "github.com/Zzaniu/tool/sre"
+    "github.com/Zzaniu/tool/zlog"
     "google.golang.org/grpc"
     "google.golang.org/grpc/codes"
     "google.golang.org/grpc/status"

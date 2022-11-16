@@ -32,7 +32,7 @@ package recovery
 
 import (
     "context"
-    "github.com/Zzaniu/zrpc/tool/zlog"
+    "github.com/Zzaniu/tool/zlog"
     "google.golang.org/grpc"
     "google.golang.org/grpc/codes"
     "google.golang.org/grpc/status"

@@ -31,7 +31,7 @@ Desc   :
 package configure
 
 import (
-    "github.com/Zzaniu/zrpc/tool/zlog"
+    "github.com/Zzaniu/tool/zlog"
     "gopkg.in/yaml.v2"
     "io/ioutil"
 )

@@ -31,7 +31,7 @@ Desc   :
 package redis
 
 import (
-    "github.com/Zzaniu/zrpc/tool/zlog"
+    "github.com/Zzaniu/tool/zlog"
     "strings"
     "sync"
     "time"

@@ -31,8 +31,8 @@ Desc   : 链接：https://github.com/zeromicro/go-zero/blob/master/zrpc/internal
 package p2c
 
 import (
-    "github.com/Zzaniu/zrpc/utils/errcode"
-    "github.com/Zzaniu/zrpc/utils/timex"
+    "github.com/Zzaniu/tool/errcode"
+    "github.com/Zzaniu/tool/timex"
     "google.golang.org/grpc/balancer"
     "google.golang.org/grpc/balancer/base"
     "google.golang.org/grpc/resolver"
