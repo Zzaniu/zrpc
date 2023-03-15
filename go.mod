@@ -5,7 +5,7 @@ go 1.16
 require (
 	github.com/Zzaniu/tool v0.0.1
 	github.com/go-basic/uuid v1.0.0
-	github.com/go-redis/redis v6.15.9+incompatible
+	github.com/go-redis/redis/v8 v8.11.4
 	go.etcd.io/etcd/api/v3 v3.5.2
 	go.etcd.io/etcd/client/v3 v3.5.2
 	go.opentelemetry.io/otel v1.11.1

@@ -31,12 +31,13 @@ Desc   :
 package redis
 
 import (
+    "context"
     "github.com/Zzaniu/tool/zlog"
     "strings"
     "sync"
     "time"
 
-    "github.com/go-redis/redis"
+    "github.com/go-redis/redis/v8"
 )
 
 type (
@@ -103,7 +104,7 @@ func (rds *Redis) Init(opts ...Opts) {
                 PoolSize:     1,
                 MinIdleConns: 0,
             })
-            _, err := clusterCache.Ping().Result()
+            _, err := clusterCache.Ping(context.Background()).Result()
             if err != nil {
                 zlog.Fatalf("redis cluster ping failed: %v", err)
             }
@@ -116,7 +117,7 @@ func (rds *Redis) Init(opts ...Opts) {
                 WriteTimeout: opt.writeTimeout, // 设置写入超时
                 DB:           rds.Db,           // use default DB
             })
-            _, err := cache.Ping().Result()
+            _, err := cache.Ping(context.Background()).Result()
             if err != nil {
                 zlog.Fatalf("redis ping failed: %v", err)
             }
