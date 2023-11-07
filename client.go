@@ -37,7 +37,6 @@ import (
     _ "github.com/Zzaniu/zrpc/middleware/balancer"
     "github.com/Zzaniu/zrpc/middleware/balancer/p2c"
     "github.com/Zzaniu/zrpc/middleware/register"
-    _ "github.com/Zzaniu/zrpc/middleware/resolver"
     "github.com/Zzaniu/zrpc/middleware/resolver/etcd"
     "github.com/Zzaniu/zrpc/middleware/timeout"
     "github.com/Zzaniu/zrpc/middleware/tracer"

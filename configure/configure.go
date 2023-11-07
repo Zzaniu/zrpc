@@ -33,7 +33,7 @@ package configure
 import (
     "github.com/Zzaniu/tool/zlog"
     "gopkg.in/yaml.v2"
-    "io/ioutil"
+    "os"
 )
 
 const (
@@ -61,7 +61,7 @@ func (e *EtcdConf) HasEtcd() bool {
 }
 
 func MustLoadCfg(path string, config interface{}) {
-    content, err := ioutil.ReadFile(path)
+    content, err := os.ReadFile(path)
     if err != nil {
         zlog.Fatalf("read cfg file fail: %v", err)
     }

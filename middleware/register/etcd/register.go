@@ -205,6 +205,7 @@ func (r *RegisterEtcd) heartBeat(ctx context.Context, leaseID clientv3.LeaseID, 
                 retreat = append(retreat, 1<<retryCnt)
                 time.Sleep(time.Duration(retreat[rand.Intn(len(retreat))]) * time.Second)
             }
+            // TODO: if retry failed, do something with this error
             if _, ok := <-kac; !ok {
                 // retry failed
                 return
@@ -220,7 +221,6 @@ func (r *RegisterEtcd) heartBeat(ctx context.Context, leaseID clientv3.LeaseID, 
                 }
                 // need to retry registration
                 curLeaseID = 0
-                continue
             }
         case <-r.opt.ctx.Done():
             return
