@@ -7,6 +7,6 @@ ClientConf:
 UserServerName: user.rpc
 AddServerName: add.rpc
 Trace:
-  Endpoint: "http://172.18.2.249:14268/api/traces"
+  Endpoint: "http://172.18.2.249:4318/v1/traces"
   Name: better
   Model: Dev
